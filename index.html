@@ -423,6 +423,31 @@ body{
   display:flex;align-items:center;justify-content:center;
   margin:0 0 8px;height:200px;
 }
+.outfit-image{
+  height:200px;border-radius:12px;object-fit:contain;
+  cursor:pointer;transition:transform 0.2s;
+}
+.outfit-image:active{transform:scale(0.98)}
+
+/* ===== Fullscreen Modal ===== */
+.fullscreen-modal{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.9);z-index:10000;
+  display:none;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.3s;
+}
+.fullscreen-modal.show{display:flex;opacity:1}
+.fullscreen-modal img{
+  max-width:90%;max-height:90%;object-fit:contain;
+  border-radius:12px;
+}
+.fullscreen-modal .close-btn{
+  position:absolute;top:20px;right:20px;
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,0.2);border:none;
+  color:#fff;font-size:24px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
 
 /* ===== Animations ===== */
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -433,6 +458,12 @@ body{
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Fullscreen Modal -->
+<div class="fullscreen-modal" id="fullscreenModal" onclick="closeFullscreen(event)">
+  <button class="close-btn" onclick="closeFullscreen(event)">×</button>
+  <img id="fullscreenImg" src="" alt="穿搭展示">
+</div>
 
 <div class="app-container">
 
@@ -497,7 +528,7 @@ body{
     <div class="glass-card-gold outfit-recommend">
       <div class="ai-tag">AI STYLIST</div>
       <div class="mannequin-container">
-        <img src="mannequin_outfit.jpg" alt="穿搭展示" style="height: 200px; border-radius: 12px; object-fit: contain;">
+        <img src="mannequin_clean.jpg" alt="穿搭展示" class="outfit-image" onclick="openFullscreen(this)">
       </div>
       <div class="outfit-items">
         <div class="outfit-item">
@@ -998,6 +1029,23 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ===== Fullscreen Image =====
+function openFullscreen(img) {
+  const modal = document.getElementById('fullscreenModal');
+  const fullImg = document.getElementById('fullscreenImg');
+  fullImg.src = img.src;
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFullscreen(e) {
+  if (e.target.tagName !== 'IMG') {
+    const modal = document.getElementById('fullscreenModal');
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+  }
 }
 
 // ===== Wardrobe Page =====
