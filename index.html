@@ -564,7 +564,53 @@ body{
 /* ===== Mannequin Display ===== */
 .mannequin-container{
   display:flex;align-items:center;justify-content:center;
-  margin:0 0 8px;height:200px;
+  margin:0 0 8px;height:280px;position:relative;
+  background:linear-gradient(180deg,rgba(196,167,125,0.05) 0%,rgba(196,167,125,0.12) 100%);
+  border-radius:16px;overflow:hidden;
+}
+.mannequin-body{
+  position:relative;width:140px;height:260px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.mannequin-slot{
+  position:absolute;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;overflow:hidden;
+  box-shadow:0 2px 12px rgba(90,82,76,0.08);
+  transition:all 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.mannequin-slot img{
+  width:100%;height:100%;object-fit:cover;
+}
+/* 上装位置 */
+.mannequin-slot.top-slot{
+  top:30px;left:50%;transform:translateX(-50%);
+  width:90px;height:80px;border-radius:10px;
+}
+/* 下装位置 */
+.mannequin-slot.bottom-slot{
+  top:115px;left:50%;transform:translateX(-50%);
+  width:80px;height:85px;border-radius:10px;
+}
+/* 外套位置 */
+.mannequin-slot.outer-slot{
+  top:20px;left:50%;transform:translateX(-50%);
+  width:100px;height:95px;border-radius:10px;
+  z-index:2;
+}
+/* 鞋子位置 */
+.mannequin-slot.shoes-slot{
+  bottom:10px;left:50%;transform:translateX(-50%);
+  width:60px;height:40px;border-radius:8px;
+}
+/* 配饰位置 */
+.mannequin-slot.acc-slot{
+  top:10px;right:5px;
+  width:36px;height:36px;border-radius:50%;
+}
+/* 模特轮廓SVG */
+.mannequin-svg{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:160px;height:260px;opacity:0.15;pointer-events:none;
 }
 .outfit-image{
   height:200px;border-radius:12px;object-fit:contain;
@@ -639,7 +685,9 @@ body{
 <!-- Fullscreen Modal -->
 <div class="fullscreen-modal" id="fullscreenModal" onclick="closeFullscreen(event)">
   <button class="close-btn" onclick="closeFullscreen(event)">×</button>
-  <img id="fullscreenImg" src="" alt="穿搭展示">
+  <div class="fullscreen-content">
+    <img id="fullscreenImg" src="" alt="穿搭展示">
+  </div>
 </div>
 
 <div class="app-container">
@@ -1211,7 +1259,7 @@ function setData(key, val) {
 }
 
 function initDefaultData() {
-  const DATA_VERSION = 'v4';
+  const DATA_VERSION = 'v5';
   if (localStorage.getItem(CLOTHING_KEY) && localStorage.getItem('wardrobe_version') === DATA_VERSION) {
     return; // 已有最新数据
   }
@@ -1311,17 +1359,32 @@ function showToast(msg) {
 }
 
 // ===== Fullscreen Image =====
-function openFullscreen(img) {
+function openFullscreen(el) {
   const modal = document.getElementById('fullscreenModal');
   const fullImg = document.getElementById('fullscreenImg');
-  fullImg.src = img.src;
+  if (el.tagName === 'IMG') {
+    fullImg.src = el.src;
+    fullImg.style.display = 'block';
+  } else if (el.classList && el.classList.contains('mannequin-body')) {
+    // 假人模特：克隆整个body到modal中
+    const clone = el.cloneNode(true);
+    clone.style.transform = 'scale(1.3)';
+    clone.style.transformOrigin = 'center top';
+    const existing = modal.querySelector('.mannequin-body-clone');
+    if (existing) existing.remove();
+    clone.classList.add('mannequin-body-clone');
+    modal.querySelector('.fullscreen-content').appendChild(clone);
+    fullImg.style.display = 'none';
+  }
   modal.classList.add('show');
   document.body.style.overflow = 'hidden';
 }
 
 function closeFullscreen(e) {
-  if (e.target.tagName !== 'IMG') {
+  if (e.target.tagName !== 'IMG' && !e.target.closest('.mannequin-body-clone')) {
     const modal = document.getElementById('fullscreenModal');
+    const clone = modal.querySelector('.mannequin-body-clone');
+    if (clone) clone.remove();
     modal.classList.remove('show');
     document.body.style.overflow = '';
   }
@@ -1360,14 +1423,13 @@ function renderWardrobe() {
     const hasImage = c.image && c.image.length > 0;
     const isOutdated = c.status === 'outdated';
     const styleLabel = c.style ? (styleMap[c.style] || '') : '';
-    const genderLabel = c.gender ? (genderMap[c.gender] || '') : '';
+    // 列表页用emoji+色块预览，不加载大图（详情页才加载高清图）
+    const colorDot = c.color ? `<div style="width:8px;height:8px;border-radius:50%;background:${c.color};margin:0 auto 6px;border:1px solid var(--border-subtle)"></div>` : '';
     return `
       <div class="clothing-card fade-in" onclick="viewClothingDetail('${c.id}')">
         ${isOutdated ? '<div class="c-status-tag">过时</div>' : ''}
-        ${hasImage 
-          ? `<img class="c-image" src="${c.image}" alt="${c.name}">`
-          : `<div class="c-icon">${c.icon || categoryIcons[c.category] || '👕'}</div>`
-        }
+        <div class="c-icon">${c.icon || categoryIcons[c.category] || '👕'}</div>
+        ${colorDot}
         <div class="c-name">${c.name}</div>
         <div class="c-season">${styleLabel || seasonMap[c.season] || c.season}</div>
       </div>
@@ -1937,11 +1999,65 @@ function renderMainOutfit() {
   const outfit = currentRecommendations[currentMainOutfitIndex];
   const container = document.getElementById('main-outfit-area');
 
-  // 穿搭单品展示
+  // 按类别整理衣物
+  const itemsByCategory = {};
+  outfit.items.forEach(item => {
+    if (!itemsByCategory[item.category]) itemsByCategory[item.category] = [];
+    itemsByCategory[item.category].push(item);
+  });
+
+  // 生成假人模特穿搭展示
+  const mannequinSvg = `
+    <svg class="mannequin-svg" viewBox="0 0 160 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="80" cy="22" rx="16" ry="18" stroke="#C4A77D" stroke-width="1.5"/>
+      <line x1="80" y1="40" x2="80" y2="110" stroke="#C4A77D" stroke-width="1.5"/>
+      <line x1="80" y1="55" x2="45" y2="95" stroke="#C4A77D" stroke-width="1.5"/>
+      <line x1="80" y1="55" x2="115" y2="95" stroke="#C4A77D" stroke-width="1.5"/>
+      <line x1="80" y1="110" x2="60" y2="200" stroke="#C4A77D" stroke-width="1.5"/>
+      <line x1="80" y1="110" x2="100" y2="200" stroke="#C4A77D" stroke-width="1.5"/>
+      <line x1="60" y1="200" x2="55" y2="255" stroke="#C4A77D" stroke-width="1.5"/>
+      <line x1="100" y1="200" x2="105" y2="255" stroke="#C4A77D" stroke-width="1.5"/>
+    </svg>
+  `;
+
+  // 生成各部位的衣物图片
+  let slotsHtml = mannequinSvg;
+  
+  // 外套（如果有）
+  const outer = (itemsByCategory['outer'] || [])[0];
+  if (outer && outer.image) {
+    slotsHtml += `<div class="mannequin-slot outer-slot"><img src="${outer.image}" alt="${outer.name}" loading="lazy"></div>`;
+  }
+  
+  // 上装
+  const top = (itemsByCategory['top'] || [])[0];
+  if (top && top.image) {
+    slotsHtml += `<div class="mannequin-slot top-slot"><img src="${top.image}" alt="${top.name}" loading="lazy"></div>`;
+  }
+  
+  // 下装
+  const bottom = (itemsByCategory['bottom'] || [])[0];
+  if (bottom && bottom.image) {
+    slotsHtml += `<div class="mannequin-slot bottom-slot"><img src="${bottom.image}" alt="${bottom.name}" loading="lazy"></div>`;
+  }
+  
+  // 鞋子
+  const shoes = (itemsByCategory['shoes'] || [])[0];
+  if (shoes && shoes.image) {
+    slotsHtml += `<div class="mannequin-slot shoes-slot"><img src="${shoes.image}" alt="${shoes.name}" loading="lazy"></div>`;
+  }
+  
+  // 配饰（取第一个）
+  const acc = (itemsByCategory['accessory'] || [])[0];
+  if (acc && acc.image) {
+    slotsHtml += `<div class="mannequin-slot acc-slot"><img src="${acc.image}" alt="${acc.name}" loading="lazy"></div>`;
+  }
+
+  // 穿搭单品列表（用小缩略图+名称）
   const itemsHtml = outfit.items.map(item => {
     const hasImage = item.image && item.image.length > 0;
     const imgHtml = hasImage
-      ? `<img src="${item.image}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`
+      ? `<img src="${item.image}" alt="${item.name}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`
       : `<span style="font-size:28px">${item.icon || categoryIcons[item.category] || '👕'}</span>`;
     return `
       <div class="outfit-item">
@@ -1953,6 +2069,9 @@ function renderMainOutfit() {
 
   container.innerHTML = `
     <div class="ai-tag">AI STYLIST</div>
+    <div class="mannequin-container" onclick="openFullscreen(this.querySelector('.mannequin-body'))">
+      <div class="mannequin-body">${slotsHtml}</div>
+    </div>
     <div class="outfit-items">${itemsHtml}</div>
     <div class="outfit-title">${outfit.styleName}风格 · ${outfit.template}</div>
     <div class="outfit-subtitle">色彩和谐度 ${Math.round(outfit.harmonyScore * 100)}分 · 适合${seasonMap[getCurrentSeason()]}</div>
