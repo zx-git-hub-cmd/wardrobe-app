@@ -1251,12 +1251,31 @@ function setData(key, val) {
 }
 
 function initDefaultData() {
-  const DATA_VERSION = 'v2';
+  const DATA_VERSION = 'v3';
   if (localStorage.getItem(CLOTHING_KEY) && localStorage.getItem('wardrobe_version') === DATA_VERSION) {
     return; // 已有最新数据
   }
+  // 为默认衣物添加图片路径
+  const clothesWithImages = defaultClothes.map(c => {
+    if (c.image && c.image.length > 0) return c; // 已有图片（用户上传的）
+    // 根据ID匹配预置图片
+    const imgMap = {
+      'w01':'images/w01.jpg','w02':'images/w02.jpg','w03':'images/w03.jpg','w04':'images/w04.jpg','w05':'images/w05.jpg',
+      'w06':'images/w06.jpg','w07':'images/w07.jpg','w08':'images/w08.jpg','w09':'images/w09.jpg','w10':'images/w10.jpg',
+      'w11':'images/w11.jpg','w12':'images/w12.jpg','w13':'images/w13.jpg','w14':'images/w14.jpg','w15':'images/w15.jpg',
+      'w16':'images/w16.jpg','w17':'images/w17.jpg','w18':'images/w18.jpg','w19':'images/w19.jpg','w20':'images/w20.jpg',
+      'm01':'images/m01.jpg','m02':'images/m02.jpg','m03':'images/m03.jpg','m04':'images/m04.jpg','m05':'images/m05.jpg',
+      'm06':'images/m06.jpg','m07':'images/m07.jpg','m08':'images/m08.jpg','m09':'images/m09.jpg','m10':'images/m10.jpg',
+      'm11':'images/m11.jpg','m12':'images/m12.jpg','m13':'images/m13.jpg','m14':'images/m14.jpg','m15':'images/m15.jpg',
+      'm16':'images/m16.jpg','m17':'images/m17.jpg','m18':'images/m18.jpg','m19':'images/m19.jpg','m20':'images/m20.jpg',
+    };
+    if (imgMap[c.id]) {
+      return {...c, image: imgMap[c.id]};
+    }
+    return c;
+  });
   // 清除旧数据，写入新数据
-  setData(CLOTHING_KEY, defaultClothes);
+  setData(CLOTHING_KEY, clothesWithImages);
   setData(ALERTS_KEY, defaultAlerts);
   localStorage.setItem('wardrobe_version', DATA_VERSION);
 }
