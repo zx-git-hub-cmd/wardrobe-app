@@ -1597,6 +1597,67 @@ function toggleCheck(el) {
 
 // ===== Outfit History =====
 const OUTFIT_HISTORY_KEY = 'wardrobe_outfit_history';
+const USER_PREFERENCES_KEY = 'wardrobe_user_preferences';
+
+// 用户偏好数据结构
+let userPreferences = {
+  styleWeights: {},    // 风格权重 { casual: 1.2, business: 0.8, ... }
+  colorWeights: {},    // 颜色权重
+  totalAdoptions: 0    // 总采纳次数
+};
+
+function loadUserPreferences() {
+  try {
+    const data = localStorage.getItem(USER_PREFERENCES_KEY);
+    if (data) {
+      userPreferences = JSON.parse(data);
+    }
+  } catch (e) {
+    console.log('Failed to load preferences');
+  }
+}
+
+function saveUserPreferences() {
+  localStorage.setItem(USER_PREFERENCES_KEY, JSON.stringify(userPreferences));
+}
+
+// 更新用户偏好（采纳穿搭时调用）
+function updateUserPreferences(outfit) {
+  userPreferences.totalAdoptions++;
+  
+  // 更新风格权重
+  outfit.items.forEach(item => {
+    if (item.style) {
+      userPreferences.styleWeights[item.style] = 
+        (userPreferences.styleWeights[item.style] || 1) + 0.1;
+    }
+    // 更新颜色权重
+    if (item.color) {
+      userPreferences.colorWeights[item.color] = 
+        (userPreferences.colorWeights[item.color] || 1) + 0.05;
+    }
+  });
+  
+  // 归一化权重（防止无限增长）
+  const maxStyleWeight = Math.max(...Object.values(userPreferences.styleWeights), 2);
+  Object.keys(userPreferences.styleWeights).forEach(k => {
+    userPreferences.styleWeights[k] = Math.min(userPreferences.styleWeights[k], maxStyleWeight);
+  });
+  
+  saveUserPreferences();
+}
+
+// 获取衣物的偏好加分
+function getPreferenceBoost(item) {
+  let boost = 0;
+  if (item.style && userPreferences.styleWeights[item.style]) {
+    boost += (userPreferences.styleWeights[item.style] - 1) * 0.3;
+  }
+  if (item.color && userPreferences.colorWeights[item.color]) {
+    boost += (userPreferences.colorWeights[item.color] - 1) * 0.1;
+  }
+  return Math.min(boost, 0.5); // 最大加分0.5
+}
 
 function getOutfitHistory() {
   try {
@@ -1642,6 +1703,7 @@ function confirmOutfit() {
   if (currentRecommendations.length === 0) return;
   const outfit = currentRecommendations[currentMainOutfitIndex];
   saveOutfitToHistory(outfit);
+  updateUserPreferences(outfit);
   showToast('穿搭已记录，明天见！');
 }
 
@@ -2071,17 +2133,19 @@ function generateOneOutfit(clothes, gender, season, excludeIds) {
     }
     if (pool.length === 0) continue;
 
-    // 计算每件衣物的综合评分：颜色和谐度 + 新鲜度（近期没穿过）
+    // 计算每件衣物的综合评分：颜色和谐度 + 新鲜度 + 用户偏好
     const scorePool = pool.map(item => {
       let score = 0;
       // 颜色和谐度
       if (selected.length > 0) {
-        score += calcHarmonyScore([...selected, item]) * 0.6;
+        score += calcHarmonyScore([...selected, item]) * 0.5;
       }
       // 新鲜度：近期没穿过的加分
       if (!recentWornIds.has(item.id)) {
-        score += 0.4;
+        score += 0.3;
       }
+      // 用户偏好加分
+      score += getPreferenceBoost(item);
       return { item, score };
     });
 
@@ -2390,6 +2454,7 @@ if ('serviceWorker' in navigator) {
 
 // ===== Init =====
 initDefaultData();
+loadUserPreferences();
 
 // Set initial page visible
 requestAnimationFrame(() => {
