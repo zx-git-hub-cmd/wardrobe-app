@@ -6,6 +6,7 @@ const ASSETS = [
 
 // 图片文件列表
 const IMAGE_FILES = [
+  '/images/mannequin_clean.jpg',
   '/images/w01.jpg','/images/w02.jpg','/images/w03.jpg','/images/w04.jpg','/images/w05.jpg',
   '/images/w06.jpg','/images/w07.jpg','/images/w08.jpg','/images/w09.jpg','/images/w10.jpg',
   '/images/w11.jpg','/images/w12.jpg','/images/w13.jpg','/images/w14.jpg','/images/w15.jpg',
@@ -16,10 +17,25 @@ const IMAGE_FILES = [
   '/images/m16.jpg','/images/m17.jpg','/images/m18.jpg','/images/m19.jpg','/images/m20.jpg',
 ];
 
+// 缩略图文件列表（优先缓存，用于快速加载）
+const THUMB_FILES = [
+  '/images/thumbs/w01.jpg','/images/thumbs/w02.jpg','/images/thumbs/w03.jpg','/images/thumbs/w04.jpg','/images/thumbs/w05.jpg',
+  '/images/thumbs/w06.jpg','/images/thumbs/w07.jpg','/images/thumbs/w08.jpg','/images/thumbs/w09.jpg','/images/thumbs/w10.jpg',
+  '/images/thumbs/w11.jpg','/images/thumbs/w12.jpg','/images/thumbs/w13.jpg','/images/thumbs/w14.jpg','/images/thumbs/w15.jpg',
+  '/images/thumbs/w16.jpg','/images/thumbs/w17.jpg','/images/thumbs/w18.jpg','/images/thumbs/w19.jpg','/images/thumbs/w20.jpg',
+  '/images/thumbs/m01.jpg','/images/thumbs/m02.jpg','/images/thumbs/m03.jpg','/images/thumbs/m04.jpg','/images/thumbs/m05.jpg',
+  '/images/thumbs/m06.jpg','/images/thumbs/m07.jpg','/images/thumbs/m08.jpg','/images/thumbs/m09.jpg','/images/thumbs/m10.jpg',
+  '/images/thumbs/m11.jpg','/images/thumbs/m12.jpg','/images/thumbs/m13.jpg','/images/thumbs/m14.jpg','/images/thumbs/m15.jpg',
+  '/images/thumbs/m16.jpg','/images/thumbs/m17.jpg','/images/thumbs/m18.jpg','/images/thumbs/m19.jpg','/images/thumbs/m20.jpg',
+];
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([...ASSETS, ...IMAGE_FILES]);
+      // 优先缓存缩略图（快速加载），然后缓存高清图
+      return cache.addAll([...ASSETS, ...THUMB_FILES]).then(() => {
+        return cache.addAll(IMAGE_FILES);
+      }).catch(() => {}); // 高清图缓存失败不影响缩略图
     })
   );
   self.skipWaiting();
