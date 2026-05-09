@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wardrobe-app-v1';
+const CACHE_NAME = 'wardrobe-app-v2';
 const ASSETS = [
   '/index.html',
   '/manifest.json'
@@ -25,21 +25,21 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // 网络优先策略：优先从网络获取最新内容
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).then((fetchResponse) => {
-        if (fetchResponse.status === 200) {
-          const responseClone = fetchResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return fetchResponse;
-      });
-    }).catch(() => {
-      if (event.request.destination === 'document') {
-        return caches.match('/index.html');
+    fetch(event.request).then((fetchResponse) => {
+      if (fetchResponse.status === 200) {
+        const responseClone = fetchResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseClone);
+        });
       }
+      return fetchResponse;
+    }).catch(() => {
+      // 网络不可用时，回退到缓存
+      return caches.match(event.request).then((response) => {
+        return response || caches.match('/index.html');
+      });
     })
   );
 });
