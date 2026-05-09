@@ -120,7 +120,45 @@ body{
 .weather-card .temp{font-size:36px;font-weight:200;color:var(--text)}
 .weather-card .weather-info{text-align:right}
 .weather-card .weather-desc{font-size:13px;font-weight:300;color:var(--text-secondary)}
-.weather-card .weather-loc{font-size:11px;font-weight:300;color:var(--text-muted);margin-top:2px}
+.weather-card .weather-loc{font-size:11px;font-weight:300;color:var(--text-muted);margin-top:2px;cursor:pointer}
+.weather-card .weather-loc:active{color:var(--gold)}
+
+/* ===== City Picker ===== */
+.city-picker{
+  display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(90,82,76,0.35);z-index:9997;
+  align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.3s;
+}
+.city-picker.show{display:flex;opacity:1}
+.city-picker-content{
+  background:var(--bg-card);border-radius:var(--radius-lg);
+  padding:24px 20px;width:calc(100% - 40px);max-width:400px;
+  box-shadow:0 8px 40px rgba(90,82,76,0.15);
+  max-height:70vh;overflow-y:auto;
+}
+.city-picker-title{
+  font-size:15px;font-weight:300;color:var(--text);text-align:center;
+  margin-bottom:18px;letter-spacing:0.5px;
+}
+.city-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+}
+.city-grid .city-item{
+  padding:10px 4px;border-radius:var(--radius-sm);
+  border:1px solid var(--border-subtle);background:transparent;
+  color:var(--text-secondary);font-size:12px;font-weight:300;
+  cursor:pointer;text-align:center;transition:all 0.2s;
+}
+.city-grid .city-item:active{transform:scale(0.95);border-color:var(--gold);color:var(--gold)}
+.city-grid .city-item.active{background:var(--gold);color:#FFFFFF;border-color:var(--gold)}
+.city-picker-close{
+  width:100%;padding:14px;margin-top:16px;
+  background:transparent;border:1px solid var(--border);
+  border-radius:var(--radius);font-size:13px;font-weight:300;
+  color:var(--text-secondary);cursor:pointer;transition:all 0.2s;
+}
+.city-picker-close:active{transform:scale(0.98);border-color:var(--gold);color:var(--gold)}
 
 .outfit-recommend{margin:20px 0}
 .outfit-items{
@@ -196,6 +234,49 @@ body{
   background:rgba(212,165,116,0.15);color:var(--warning);
   border:1px solid rgba(212,165,116,0.3);
 }
+
+/* ===== Batch Mode ===== */
+.batch-mode .clothing-card{cursor:default}
+.batch-mode .clothing-card .batch-check{
+  display:flex;
+}
+.batch-check{
+  display:none;position:absolute;top:8px;left:8px;z-index:5;
+  width:22px;height:22px;border-radius:50%;
+  border:2px solid var(--border);
+  background:rgba(255,255,255,0.9);
+  align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.2s;
+  font-size:12px;color:transparent;
+}
+.batch-check.checked{
+  background:var(--gold);border-color:var(--gold);color:#FFFFFF;
+}
+.batch-bar{
+  display:none;position:fixed;bottom:calc(var(--nav-height) + var(--safe-bottom) + 10px);
+  left:20px;right:20px;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 20px;
+  box-shadow:0 4px 24px rgba(90,82,76,0.12);
+  z-index:100;align-items:center;justify-content:space-between;
+}
+.batch-bar.show{display:flex}
+.batch-bar .batch-info{font-size:13px;font-weight:300;color:var(--text-secondary)}
+.batch-bar .batch-info span{color:var(--gold);font-weight:400}
+.batch-bar .batch-del-btn{
+  padding:8px 24px;border-radius:20px;border:none;
+  background:rgba(196,120,106,0.12);color:#C4786A;
+  font-size:13px;font-weight:300;cursor:pointer;transition:all 0.2s;
+}
+.batch-bar .batch-del-btn:active{transform:scale(0.95);background:rgba(196,120,106,0.2)}
+.batch-bar .batch-del-btn:disabled{opacity:0.4;cursor:default;transform:none}
+.batch-bar .batch-cancel-btn{
+  padding:8px 20px;border-radius:20px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--text-secondary);font-size:13px;font-weight:300;
+  cursor:pointer;transition:all 0.2s;margin-right:10px;
+}
+.batch-bar .batch-cancel-btn:active{transform:scale(0.95);border-color:var(--gold);color:var(--gold)}
 
 /* ===== OUTFIT DETAIL PAGE ===== */
 .outfit-detail-card{margin:20px 0}
@@ -568,9 +649,14 @@ body{
   background:linear-gradient(180deg,rgba(196,167,125,0.05) 0%,rgba(196,167,125,0.12) 100%);
   border-radius:16px;overflow:hidden;
 }
+.mannequin-bg{
+  position:absolute;width:140px;height:260px;object-fit:contain;opacity:0.9;
+  z-index:0;
+}
 .mannequin-body{
   position:relative;width:140px;height:260px;
   display:flex;flex-direction:column;align-items:center;
+  z-index:1;
 }
 .mannequin-slot{
   position:absolute;display:flex;align-items:center;justify-content:center;
@@ -690,6 +776,15 @@ body{
   </div>
 </div>
 
+<!-- City Picker Modal -->
+<div class="city-picker" id="cityPicker" onclick="closeCityPicker(event)">
+  <div class="city-picker-content" onclick="event.stopPropagation()">
+    <div class="city-picker-title">选择城市</div>
+    <div class="city-grid" id="cityGrid"></div>
+    <button class="city-picker-close" onclick="closeCityPicker()">关闭</button>
+  </div>
+</div>
+
 <div class="app-container">
 
   <!-- ===== PAGE: HOME ===== -->
@@ -746,7 +841,7 @@ body{
       <div class="temp" id="weather-temp">--°</div>
       <div class="weather-info">
         <div class="weather-desc" id="weather-desc">获取中...</div>
-        <div class="weather-loc" id="weather-loc">定位中...</div>
+        <div class="weather-loc" id="weather-loc" onclick="openCityPicker()">定位中...</div>
       </div>
     </div>
 
@@ -786,7 +881,17 @@ body{
     <div class="filter-tabs" id="style-tabs">
       <button class="filter-tab active" data-style="all">全部风格</button>
     </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="btn-outline" id="batch-toggle-btn" onclick="toggleBatchMode()" style="font-size:11px;padding:0 14px;height:30px">批量管理</button>
+    </div>
     <div class="clothing-grid" id="clothing-grid"></div>
+    <div class="batch-bar" id="batch-bar">
+      <div class="batch-info">已选 <span id="batch-count">0</span> 件</div>
+      <div>
+        <button class="batch-cancel-btn" onclick="toggleBatchMode()">取消</button>
+        <button class="batch-del-btn" id="batch-del-btn" onclick="batchDelete()" disabled>删除</button>
+      </div>
+    </div>
   </div>
 
   <!-- ===== PAGE: OUTFIT DETAIL ===== -->
@@ -1338,6 +1443,14 @@ function navigateTo(page) {
     if (page === 'alerts') renderAlerts();
     if (page === 'stats') updateStats();
     if (page === 'add') resetAddForm();
+    // 离开衣橱页面时退出批量模式
+    if (page !== 'wardrobe' && isBatchMode) {
+      isBatchMode = false;
+      batchSelectedIds.clear();
+      document.getElementById('page-wardrobe').classList.remove('batch-mode');
+      document.getElementById('batch-bar').classList.remove('show');
+      document.getElementById('batch-toggle-btn').textContent = '批量管理';
+    }
   }, 180);
 }
 
@@ -1434,10 +1547,12 @@ function renderWardrobe() {
     const thumbSrc = c.thumb || c.image;
     const isOutdated = c.status === 'outdated';
     const styleLabel = c.style ? (styleMap[c.style] || '') : '';
+    const isChecked = batchSelectedIds.has(String(c.id));
     return `
       <div class="clothing-card fade-in" onclick="viewClothingDetail('${c.id}')">
+        <div class="batch-check ${isChecked ? 'checked' : ''}" onclick="event.stopPropagation();toggleSelect('${c.id}')">${isChecked ? '✓' : ''}</div>
         ${isOutdated ? '<div class="c-status-tag">过时</div>' : ''}
-        ${hasImage 
+        ${hasImage
           ? `<img class="c-image" src="${thumbSrc}" alt="${c.name}" loading="lazy">`
           : `<div class="c-icon">${c.icon || categoryIcons[c.category] || '👕'}</div>`
         }
@@ -1588,6 +1703,84 @@ function confirmDelete() {
   
   closeConfirmModal();
   setTimeout(() => goBack(), 300);
+}
+
+// ===== Batch Mode =====
+let isBatchMode = false;
+let batchSelectedIds = new Set();
+
+function toggleBatchMode() {
+  isBatchMode = !isBatchMode;
+  const page = document.getElementById('page-wardrobe');
+  const bar = document.getElementById('batch-bar');
+  const btn = document.getElementById('batch-toggle-btn');
+
+  if (isBatchMode) {
+    page.classList.add('batch-mode');
+    bar.classList.add('show');
+    btn.textContent = '完成';
+    batchSelectedIds.clear();
+    updateBatchCount();
+  } else {
+    page.classList.remove('batch-mode');
+    bar.classList.remove('show');
+    btn.textContent = '批量管理';
+    batchSelectedIds.clear();
+  }
+  renderWardrobe();
+}
+
+function toggleSelect(id) {
+  id = String(id);
+  if (batchSelectedIds.has(id)) {
+    batchSelectedIds.delete(id);
+  } else {
+    batchSelectedIds.add(id);
+  }
+  // 更新对应卡片的勾选状态
+  const checks = document.querySelectorAll('.batch-check');
+  checks.forEach(chk => {
+    const card = chk.closest('.clothing-card');
+    if (card) {
+      const cardOnclick = card.getAttribute('onclick');
+      const match = cardOnclick && cardOnclick.match(/viewClothingDetail\('([^']+)'\)/);
+      if (match && match[1] === id) {
+        if (batchSelectedIds.has(id)) {
+          chk.classList.add('checked');
+          chk.textContent = '✓';
+        } else {
+          chk.classList.remove('checked');
+          chk.textContent = '';
+        }
+      }
+    }
+  });
+  updateBatchCount();
+}
+
+function updateBatchCount() {
+  const countEl = document.getElementById('batch-count');
+  const delBtn = document.getElementById('batch-del-btn');
+  if (countEl) countEl.textContent = batchSelectedIds.size;
+  if (delBtn) delBtn.disabled = batchSelectedIds.size === 0;
+}
+
+function batchDelete() {
+  if (batchSelectedIds.size === 0) return;
+  const count = batchSelectedIds.size;
+  if (!confirm('确定要删除选中的 ' + count + ' 件衣物吗？删除后无法恢复。')) return;
+
+  const clothes = getData(CLOTHING_KEY, defaultClothes);
+  const remaining = clothes.filter(c => !batchSelectedIds.has(String(c.id)));
+  setData(CLOTHING_KEY, remaining);
+  showToast('已删除 ' + count + ' 件衣物');
+
+  batchSelectedIds.clear();
+  isBatchMode = false;
+  document.getElementById('page-wardrobe').classList.remove('batch-mode');
+  document.getElementById('batch-bar').classList.remove('show');
+  document.getElementById('batch-toggle-btn').textContent = '批量管理';
+  renderWardrobe();
 }
 
 // ===== Outfit Detail =====
@@ -1965,52 +2158,111 @@ function weatherCodeToText(code) {
   return weatherMap[code] || '多云';
 }
 
+// 城市经纬度数据
+const cityCoords = {
+  '北京':[39.90,116.41],'上海':[31.23,121.47],'广州':[23.13,113.26],'深圳':[22.54,114.06],
+  '杭州':[30.27,120.15],'成都':[30.57,104.07],'武汉':[30.59,114.31],'南京':[32.06,118.80],
+  '重庆':[29.56,106.55],'西安':[34.26,108.94],'长沙':[28.23,112.94],'天津':[39.13,117.20],
+  '苏州':[31.30,120.62],'青岛':[36.07,120.38],'大连':[38.91,121.60],'厦门':[24.48,118.09],
+  '昆明':[25.04,102.68],'哈尔滨':[45.75,126.65],'沈阳':[41.80,123.43],'三亚':[18.25,109.50]
+};
+let selectedCity = localStorage.getItem('wardrobe_selected_city') || '';
+
 // 获取用户位置并查询天气
-async function fetchWeather() {
-  try {
-    // 先尝试获取用户位置
-    const position = await new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: false,
-        timeout: 5000,
-        maximumAge: 300000 // 5分钟缓存
+async function fetchWeather(cityName) {
+  let latitude, longitude, locationName;
+
+  if (cityName && cityCoords[cityName]) {
+    // 使用选定城市的经纬度
+    [latitude, longitude] = cityCoords[cityName];
+    locationName = cityName;
+    selectedCity = cityName;
+    localStorage.setItem('wardrobe_selected_city', cityName);
+  } else if (selectedCity && cityCoords[selectedCity]) {
+    // 使用上次保存的城市
+    [latitude, longitude] = cityCoords[selectedCity];
+    locationName = selectedCity;
+  } else {
+    // 使用geolocation
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 5000,
+          maximumAge: 300000
+        });
       });
-    });
-    
-    const { latitude, longitude } = position.coords;
-    
-    // 使用Open-Meteo API获取天气（完全免费，无需API Key）
+      latitude = position.coords.latitude;
+      longitude = position.coords.longitude;
+      locationName = '当前位置';
+    } catch (geoError) {
+      console.log('Geolocation failed:', geoError.message);
+      currentWeather.season = getCurrentSeason();
+      updateWeatherUI();
+      renderHomeRecommendations();
+      return;
+    }
+  }
+
+  try {
     const response = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto`
     );
-    
+
     if (!response.ok) throw new Error('Weather API error');
-    
+
     const data = await response.json();
     const current = data.current;
-    
+
     currentWeather = {
       temp: Math.round(current.temperature_2m),
       feelsLike: Math.round(current.apparent_temperature),
       text: weatherCodeToText(current.weather_code),
       humidity: current.relative_humidity_2m,
       windSpeed: Math.round(current.wind_speed_10m),
-      location: '当前位置',
+      location: locationName,
       season: tempToSeason(current.temperature_2m)
     };
-    
+
     console.log('Weather fetched:', currentWeather);
-    
+
   } catch (error) {
     console.log('Weather fetch failed, using default:', error.message);
-    // 使用默认天气（根据当前月份估算）
     currentWeather.season = getCurrentSeason();
   }
-  
-  // 更新UI
+
   updateWeatherUI();
-  // 重新生成推荐（基于真实天气）
   renderHomeRecommendations();
+}
+
+// 打开城市选择面板
+function openCityPicker() {
+  const picker = document.getElementById('cityPicker');
+  const grid = document.getElementById('cityGrid');
+  const cities = Object.keys(cityCoords);
+
+  grid.innerHTML = cities.map(city => {
+    const isActive = city === selectedCity;
+    return `<div class="city-item ${isActive ? 'active' : ''}" onclick="selectCity('${city}')">${city}</div>`;
+  }).join('');
+
+  picker.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+// 关闭城市选择面板
+function closeCityPicker(e) {
+  if (e && e.target !== e.currentTarget) return;
+  const picker = document.getElementById('cityPicker');
+  picker.classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// 选择城市
+function selectCity(cityName) {
+  closeCityPicker();
+  showToast('正在获取 ' + cityName + ' 天气...');
+  fetchWeather(cityName);
 }
 
 // 更新天气卡片UI
@@ -2238,52 +2490,43 @@ function renderMainOutfit() {
     itemsByCategory[item.category].push(item);
   });
 
-  // 生成假人模特穿搭展示
-  const mannequinSvg = `
-    <svg class="mannequin-svg" viewBox="0 0 160 260" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="80" cy="22" rx="16" ry="18" stroke="#C4A77D" stroke-width="1.5"/>
-      <line x1="80" y1="40" x2="80" y2="110" stroke="#C4A77D" stroke-width="1.5"/>
-      <line x1="80" y1="55" x2="45" y2="95" stroke="#C4A77D" stroke-width="1.5"/>
-      <line x1="80" y1="55" x2="115" y2="95" stroke="#C4A77D" stroke-width="1.5"/>
-      <line x1="80" y1="110" x2="60" y2="200" stroke="#C4A77D" stroke-width="1.5"/>
-      <line x1="80" y1="110" x2="100" y2="200" stroke="#C4A77D" stroke-width="1.5"/>
-      <line x1="60" y1="200" x2="55" y2="255" stroke="#C4A77D" stroke-width="1.5"/>
-      <line x1="100" y1="200" x2="105" y2="255" stroke="#C4A77D" stroke-width="1.5"/>
-    </svg>
-  `;
-
   // 生成各部位的衣物图片
-  let slotsHtml = mannequinSvg;
-  
+  let slotsHtml = '';
+
   // 外套（如果有）
   const outer = (itemsByCategory['outer'] || [])[0];
   if (outer && outer.image) {
     slotsHtml += `<div class="mannequin-slot outer-slot"><img src="${outer.image}" alt="${outer.name}" loading="lazy"></div>`;
   }
-  
+
   // 上装
   const top = (itemsByCategory['top'] || [])[0];
   if (top && top.image) {
     slotsHtml += `<div class="mannequin-slot top-slot"><img src="${top.image}" alt="${top.name}" loading="lazy"></div>`;
   }
-  
+
   // 下装
   const bottom = (itemsByCategory['bottom'] || [])[0];
   if (bottom && bottom.image) {
     slotsHtml += `<div class="mannequin-slot bottom-slot"><img src="${bottom.image}" alt="${bottom.name}" loading="lazy"></div>`;
   }
-  
+
   // 鞋子
   const shoes = (itemsByCategory['shoes'] || [])[0];
   if (shoes && shoes.image) {
     slotsHtml += `<div class="mannequin-slot shoes-slot"><img src="${shoes.image}" alt="${shoes.name}" loading="lazy"></div>`;
   }
-  
-  // 配饰（取第一个）
-  const acc = (itemsByCategory['accessory'] || [])[0];
-  if (acc && acc.image) {
-    slotsHtml += `<div class="mannequin-slot acc-slot"><img src="${acc.image}" alt="${acc.name}" loading="lazy"></div>`;
-  }
+
+  // 配饰（支持多个，第二个偏移位置）
+  const accessories = itemsByCategory['accessory'] || [];
+  accessories.forEach((acc, idx) => {
+    if (acc && acc.image) {
+      const offsetStyle = idx === 0
+        ? ''
+        : 'top:50px;right:auto;left:5px;';
+      slotsHtml += `<div class="mannequin-slot acc-slot" style="${offsetStyle}"><img src="${acc.image}" alt="${acc.name}" loading="lazy"></div>`;
+    }
+  });
 
   // 穿搭单品列表（用小缩略图+名称）
   const itemsHtml = outfit.items.map(item => {
@@ -2302,7 +2545,8 @@ function renderMainOutfit() {
 
   container.innerHTML = `
     <div class="ai-tag">AI STYLIST</div>
-    <div class="mannequin-container" onclick="openFullscreen(this.querySelector('.mannequin-body'))">
+    <div class="mannequin-container" onclick="openFullscreen(this.querySelector('.mannequin-bg'))">
+      <img src="images/mannequin_clean.jpg" class="mannequin-bg" alt="模特">
       <div class="mannequin-body">${slotsHtml}</div>
     </div>
     <div class="outfit-items">${itemsHtml}</div>
