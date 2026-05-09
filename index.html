@@ -703,55 +703,15 @@ body{
     </div>
 
     <div class="glass-card-gold outfit-recommend">
-      <div class="ai-tag">AI STYLIST</div>
-      <div class="mannequin-container">
-        <img src="mannequin_clean.jpg" alt="穿搭展示" class="outfit-image" onclick="openFullscreen(this)">
-      </div>
-      <div class="outfit-items">
-        <div class="outfit-item">
-          <div class="icon">👔</div>
-          <div class="label">白色衬衫</div>
+      <div id="main-outfit-area">
+        <div class="ai-tag">AI STYLIST</div>
+        <div style="text-align:center;padding:30px 0;color:var(--text-muted);font-size:13px;font-weight:200">
+          正在为您搭配...
         </div>
-        <div class="outfit-item center">
-          <div class="icon">👖</div>
-          <div class="label">深色西裤</div>
-        </div>
-        <div class="outfit-item">
-          <div class="icon">👞</div>
-          <div class="label">棕色皮鞋</div>
-        </div>
-      </div>
-      <div class="outfit-title">商务精英风格</div>
-      <div class="outfit-subtitle">适合今日天气与场合</div>
-      <div class="outfit-btn">
-        <button class="btn-gold" onclick="navigateTo('outfit-detail')">采纳搭配</button>
       </div>
     </div>
 
-    <div class="other-recommends">
-      <h3>更多推荐</h3>
-      <div class="scroll-row">
-        <div class="mini-card" onclick="navigateTo('outfit-detail')">
-          <div class="mini-icon">🧥</div>
-          <div class="mini-title">休闲风衣</div>
-          <div class="mini-sub">18-22°C · 春秋</div>
-        </div>
-        <div class="mini-card" onclick="navigateTo('outfit-detail')">
-          <div class="mini-icon">👕</div>
-          <div class="mini-title">简约T恤</div>
-          <div class="mini-sub">25°C+ · 夏季</div>
-        </div>
-        <div class="mini-card" onclick="navigateTo('outfit-detail')">
-          <div class="mini-icon">🧣</div>
-          <div class="mini-title">围巾搭配</div>
-          <div class="mini-sub">10-15°C · 冬季</div>
-        </div>
-        <div class="mini-card" onclick="navigateTo('outfit-detail')">
-          <div class="mini-icon">🎽</div>
-          <div class="mini-title">运动套装</div>
-          <div class="mini-sub">全季 · 运动</div>
-        </div>
-      </div>
+    <div class="other-recommends" id="other-outfits-area">
     </div>
   </div>
 
@@ -1251,7 +1211,7 @@ function setData(key, val) {
 }
 
 function initDefaultData() {
-  const DATA_VERSION = 'v3';
+  const DATA_VERSION = 'v4';
   if (localStorage.getItem(CLOTHING_KEY) && localStorage.getItem('wardrobe_version') === DATA_VERSION) {
     return; // 已有最新数据
   }
@@ -1786,6 +1746,282 @@ function resetAddForm() {
   selectedStatus = 'frequent';
 }
 
+// ===== AI Outfit Recommendation Engine =====
+
+// 颜色和谐度评分 - 预定义和谐色组
+const harmonyGroups = [
+  // 奶茶暖色系
+  ['#E8D5C4','#D4C5B0','#C4A77D','#F5F0EB','#D4B896','#F1C40F','#8B6914','#6B5B3E'],
+  // 冷色系
+  ['#7BA7BC','#A3C4D9','#4A6B8A','#5B7FA5','#6B8DB5','#B8A9C9','#2C2C2C','#4A4A4A'],
+  // 大地色系
+  ['#6B7B5E','#8B8178','#5A524C','#3A3A3A','#333333','#4A4A4A','#D4C5B0','#C4A77D'],
+  // 柔美色系
+  ['#F0D6D0','#C9A9A6','#C9D4C5','#F5F0EB','#E8D5C4','#B8A9C9','#D4B896'],
+  // 黑白灰百搭
+  ['#FFFFFF','#F5F0EB','#999999','#8B8178','#4A4A4A','#333333','#2C2C2C','#3A3A3A'],
+];
+
+// 判断两个颜色是否和谐
+function isColorHarmonious(color1, color2) {
+  if (!color1 || !color2) return 0.5;
+  if (color1 === color2) return 0.7; // 同色稍降分，鼓励层次感
+  for (const group of harmonyGroups) {
+    if (group.includes(color1) && group.includes(color2)) return 1.0;
+  }
+  // 中性色(黑白灰)与任何颜色都和谐
+  const neutrals = ['#FFFFFF','#F5F0EB','#999999','#8B8178','#4A4A4A','#333333','#2C2C2C','#3A3A3A','#C0C0C0'];
+  if (neutrals.includes(color1) || neutrals.includes(color2)) return 0.8;
+  return 0.5;
+}
+
+// 计算一套穿搭的颜色和谐度总分
+function calcHarmonyScore(items) {
+  if (items.length < 2) return 1;
+  let total = 0, pairs = 0;
+  for (let i = 0; i < items.length; i++) {
+    for (let j = i + 1; j < items.length; j++) {
+      total += isColorHarmonious(items[i].color, items[j].color);
+      pairs++;
+    }
+  }
+  return total / pairs;
+}
+
+// 根据当前月份判断季节
+function getCurrentSeason() {
+  const month = new Date().getMonth() + 1;
+  if (month >= 3 && month <= 5) return 'spring';
+  if (month >= 6 && month <= 8) return 'summer';
+  if (month >= 9 && month <= 11) return 'autumn';
+  return 'winter';
+}
+
+// 获取适合当前季节的衣物
+function filterBySeason(clothes, season) {
+  return clothes.filter(c => c.season === season || c.season === 'all');
+}
+
+// 穿搭组合模板
+const outfitTemplates = {
+  women: [
+    { parts: ['top','bottom','shoes'], label: '日常穿搭' },
+    { parts: ['top','bottom','shoes','accessory'], label: '精致穿搭' },
+    { parts: ['top','outer','bottom','shoes'], label: '层次穿搭' },
+    { parts: ['top','bottom','shoes','accessory','accessory2'], label: '完整搭配' },
+  ],
+  men: [
+    { parts: ['top','bottom','shoes'], label: '简约穿搭' },
+    { parts: ['top','bottom','shoes','accessory'], label: '精致穿搭' },
+    { parts: ['top','outer','bottom','shoes'], label: '层次穿搭' },
+    { parts: ['top','bottom','shoes','accessory','accessory2'], label: '完整搭配' },
+  ]
+};
+
+// 生成一套穿搭
+function generateOneOutfit(clothes, gender, season, excludeIds) {
+  const genderClothes = clothes.filter(c => c.gender === gender && c.status !== 'outdated');
+  const seasonClothes = filterBySeason(genderClothes, season);
+  if (seasonClothes.length < 3) return null;
+
+  // 按类别分组
+  const byCategory = {};
+  seasonClothes.forEach(c => {
+    if (!byCategory[c.category]) byCategory[c.category] = [];
+    byCategory[c.category].push(c);
+  });
+
+  const templates = outfitTemplates[gender] || outfitTemplates.women;
+  // 随机选一个模板
+  const template = templates[Math.floor(Math.random() * templates.length)];
+
+  const selected = [];
+  const usedIds = new Set(excludeIds || []);
+
+  for (const part of template.parts) {
+    let pool;
+    if (part === 'accessory2') {
+      pool = (byCategory['accessory'] || []).filter(c => !usedIds.has(c.id));
+    } else {
+      pool = (byCategory[part] || []).filter(c => !usedIds.has(c.id));
+    }
+    if (pool.length === 0) continue;
+
+    // 优先选择与已选衣物颜色和谐的
+    if (selected.length > 0) {
+      pool.sort((a, b) => {
+        const scoreA = calcHarmonyScore([...selected, a]);
+        const scoreB = calcHarmonyScore([...selected, b]);
+        return scoreB - scoreA;
+      });
+      // 在前3名中随机选一个，增加多样性
+      const topN = Math.min(3, pool.length);
+      const pick = pool[Math.floor(Math.random() * topN)];
+      selected.push(pick);
+      usedIds.add(pick.id);
+    } else {
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      selected.push(pick);
+      usedIds.add(pick.id);
+    }
+  }
+
+  if (selected.length < 2) return null;
+
+  const harmonyScore = calcHarmonyScore(selected);
+  // 确定风格（取出现最多的风格）
+  const styleCount = {};
+  selected.forEach(c => {
+    if (c.style) styleCount[c.style] = (styleCount[c.style] || 0) + 1;
+  });
+  const mainStyle = Object.entries(styleCount).sort((a,b) => b[1] - a[1])[0];
+
+  return {
+    id: 'outfit_' + Date.now() + '_' + Math.random().toString(36).substr(2,4),
+    items: selected,
+    template: template.label,
+    style: mainStyle ? mainStyle[0] : 'casual',
+    styleName: mainStyle ? (styleMap[mainStyle[0]] || '混搭') : '混搭',
+    harmonyScore: harmonyScore,
+    gender: gender
+  };
+}
+
+// 生成多套推荐穿搭
+function generateRecommendations(count) {
+  const clothes = getData(CLOTHING_KEY, defaultClothes);
+  const season = getCurrentSeason();
+  const owner = getCurrentOwner();
+  const gender = owner === '爸爸' || owner === '儿子' ? 'men' : 'women';
+
+  const outfits = [];
+  const usedIds = new Set();
+  let attempts = 0;
+
+  while (outfits.length < count && attempts < 50) {
+    const outfit = generateOneOutfit(clothes, gender, season, [...usedIds]);
+    if (outfit) {
+      outfits.push(outfit);
+      outfit.items.forEach(c => usedIds.add(c.id));
+    }
+    attempts++;
+  }
+
+  // 按和谐度评分排序
+  outfits.sort((a, b) => b.harmonyScore - a.harmonyScore);
+  return outfits;
+}
+
+// 渲染首页推荐穿搭
+let currentRecommendations = [];
+let currentMainOutfitIndex = 0;
+
+function renderHomeRecommendations() {
+  currentRecommendations = generateRecommendations(5);
+  currentMainOutfitIndex = 0;
+  renderMainOutfit();
+  renderOtherOutfits();
+}
+
+function renderMainOutfit() {
+  if (currentRecommendations.length === 0) {
+    document.getElementById('main-outfit-area').innerHTML = `
+      <div style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px">
+        <div style="font-size:36px;margin-bottom:10px">👗</div>
+        衣橱中还没有足够的衣物，快去添加吧
+      </div>
+    `;
+    return;
+  }
+
+  const outfit = currentRecommendations[currentMainOutfitIndex];
+  const container = document.getElementById('main-outfit-area');
+
+  // 穿搭单品展示
+  const itemsHtml = outfit.items.map(item => {
+    const hasImage = item.image && item.image.length > 0;
+    const imgHtml = hasImage
+      ? `<img src="${item.image}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`
+      : `<span style="font-size:28px">${item.icon || categoryIcons[item.category] || '👕'}</span>`;
+    return `
+      <div class="outfit-item">
+        <div class="icon">${imgHtml}</div>
+        <div class="label">${item.name}</div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="ai-tag">AI STYLIST</div>
+    <div class="outfit-items">${itemsHtml}</div>
+    <div class="outfit-title">${outfit.styleName}风格 · ${outfit.template}</div>
+    <div class="outfit-subtitle">色彩和谐度 ${Math.round(outfit.harmonyScore * 100)}分 · 适合${seasonMap[getCurrentSeason()]}</div>
+    <div class="outfit-btn" style="display:flex;gap:10px">
+      <button class="btn-gold" style="flex:1" onclick="confirmOutfit()">✓ 采纳搭配</button>
+      <button class="btn-outline" style="flex:1;height:50px;border-radius:12px;font-size:13px" onclick="nextMainOutfit()">↻ 换一套</button>
+    </div>
+  `;
+}
+
+function renderOtherOutfits() {
+  const others = currentRecommendations.filter((_, i) => i !== currentMainOutfitIndex);
+  const container = document.getElementById('other-outfits-area');
+
+  if (others.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = `
+    <h3>更多推荐</h3>
+    <div class="scroll-row">
+      ${others.map((outfit, idx) => {
+        const mainItem = outfit.items[0];
+        const hasImage = mainItem.image && mainItem.image.length > 0;
+        const iconHtml = hasImage
+          ? `<img src="${mainItem.image}" alt="${mainItem.name}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`
+          : `<span>${mainItem.icon || '👕'}</span>`;
+        return `
+          <div class="mini-card" onclick="switchToOutfit(${currentRecommendations.indexOf(outfit)})">
+            <div class="mini-icon" style="width:48px;height:48px;border-radius:10px;overflow:hidden">${iconHtml}</div>
+            <div class="mini-title">${outfit.styleName} · ${outfit.template}</div>
+            <div class="mini-sub">${outfit.items.length}件单品 · ${Math.round(outfit.harmonyScore * 100)}分</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function nextMainOutfit() {
+  if (currentRecommendations.length <= 1) {
+    // 重新生成
+    renderHomeRecommendations();
+    showToast('已为您重新推荐');
+    return;
+  }
+  currentMainOutfitIndex = (currentMainOutfitIndex + 1) % currentRecommendations.length;
+  renderMainOutfit();
+  renderOtherOutfits();
+}
+
+function switchToOutfit(index) {
+  currentMainOutfitIndex = index;
+  renderMainOutfit();
+  renderOtherOutfits();
+  // 滚动到顶部
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 家庭成员切换时重新推荐
+function selectFamilyMember(el) {
+  document.querySelectorAll('.family-member').forEach(m => m.classList.remove('active'));
+  el.classList.add('active');
+  const name = el.dataset.name || '妈妈';
+  document.getElementById('home-title').textContent = name + '的今日穿搭';
+  renderHomeRecommendations();
+}
+
 // ===== Alerts Page =====
 function renderAlerts() {
   const alerts = getData(ALERTS_KEY, defaultAlerts);
@@ -1853,13 +2089,8 @@ function updateStats() {
 }
 
 // ===== Family Member Selector =====
-function selectFamilyMember(el) {
-  const name = el.dataset.name;
-  if (!name) return;
-  document.querySelectorAll('.family-member').forEach(m => m.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('home-title').textContent = name + '的今日穿搭';
-}
+// (selectFamilyMember 已在推荐引擎中定义，此处仅保留标题更新逻辑)
+// 注意：selectFamilyMember 在推荐引擎区域已定义，包含重新推荐功能
 
 // ===== Service Worker Registration =====
 if ('serviceWorker' in navigator) {
@@ -1875,6 +2106,8 @@ initDefaultData();
 requestAnimationFrame(() => {
   document.getElementById('page-home').classList.add('visible');
   updateNav('home');
+  // 渲染首页AI推荐穿搭
+  renderHomeRecommendations();
 });
 </script>
 </body>
