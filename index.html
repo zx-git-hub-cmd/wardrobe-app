@@ -743,10 +743,10 @@ body{
     </div>
 
     <div class="glass-card weather-card">
-      <div class="temp">22°</div>
+      <div class="temp" id="weather-temp">--°</div>
       <div class="weather-info">
-        <div class="weather-desc">多云</div>
-        <div class="weather-loc">上海 · 周三</div>
+        <div class="weather-desc" id="weather-desc">获取中...</div>
+        <div class="weather-loc" id="weather-loc">定位中...</div>
       </div>
     </div>
 
@@ -1819,6 +1819,108 @@ function resetAddForm() {
   selectedStatus = 'frequent';
 }
 
+// ===== Weather API (Open-Meteo 免费API，无需Key) =====
+
+let currentWeather = {
+  temp: 22,
+  feelsLike: 22,
+  text: '多云',
+  humidity: 60,
+  windSpeed: 10,
+  location: '上海',
+  season: 'spring'
+};
+
+// 根据温度判断穿搭季节
+function tempToSeason(temp) {
+  if (temp >= 28) return 'summer';
+  if (temp >= 18) return 'spring';
+  if (temp >= 8) return 'autumn';
+  return 'winter';
+}
+
+// 根据天气代码获取天气描述
+function weatherCodeToText(code) {
+  const weatherMap = {
+    0: '晴', 1: '晴', 2: '多云', 3: '阴',
+    45: '雾', 48: '霜雾',
+    51: '小雨', 53: '小雨', 55: '中雨',
+    56: '冻雨', 57: '冻雨',
+    61: '小雨', 63: '中雨', 65: '大雨',
+    66: '冻雨', 67: '冻雨',
+    71: '小雪', 73: '中雪', 75: '大雪',
+    77: '雪粒',
+    80: '阵雨', 81: '阵雨', 82: '暴雨',
+    85: '阵雪', 86: '阵雪',
+    95: '雷阵雨', 96: '雷阵雨', 99: '雷阵雨'
+  };
+  return weatherMap[code] || '多云';
+}
+
+// 获取用户位置并查询天气
+async function fetchWeather() {
+  try {
+    // 先尝试获取用户位置
+    const position = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: false,
+        timeout: 5000,
+        maximumAge: 300000 // 5分钟缓存
+      });
+    });
+    
+    const { latitude, longitude } = position.coords;
+    
+    // 使用Open-Meteo API获取天气（完全免费，无需API Key）
+    const response = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude.toFixed(2)}&longitude=${longitude.toFixed(2)}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto`
+    );
+    
+    if (!response.ok) throw new Error('Weather API error');
+    
+    const data = await response.json();
+    const current = data.current;
+    
+    currentWeather = {
+      temp: Math.round(current.temperature_2m),
+      feelsLike: Math.round(current.apparent_temperature),
+      text: weatherCodeToText(current.weather_code),
+      humidity: current.relative_humidity_2m,
+      windSpeed: Math.round(current.wind_speed_10m),
+      location: '当前位置',
+      season: tempToSeason(current.temperature_2m)
+    };
+    
+    console.log('Weather fetched:', currentWeather);
+    
+  } catch (error) {
+    console.log('Weather fetch failed, using default:', error.message);
+    // 使用默认天气（根据当前月份估算）
+    currentWeather.season = getCurrentSeason();
+  }
+  
+  // 更新UI
+  updateWeatherUI();
+  // 重新生成推荐（基于真实天气）
+  renderHomeRecommendations();
+}
+
+// 更新天气卡片UI
+function updateWeatherUI() {
+  const tempEl = document.getElementById('weather-temp');
+  const descEl = document.getElementById('weather-desc');
+  const locEl = document.getElementById('weather-loc');
+  
+  if (tempEl) tempEl.textContent = currentWeather.temp + '°';
+  if (descEl) descEl.textContent = currentWeather.text + ' · 湿度' + currentWeather.humidity + '%';
+  if (locEl) locEl.textContent = currentWeather.location + ' · ' + getWeekday();
+}
+
+function getWeekday() {
+  const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  return days[new Date().getDay()];
+}
+
 // ===== AI Outfit Recommendation Engine =====
 
 // 颜色和谐度评分 - 预定义和谐色组
@@ -1963,7 +2065,8 @@ function generateOneOutfit(clothes, gender, season, excludeIds) {
 // 生成多套推荐穿搭
 function generateRecommendations(count) {
   const clothes = getData(CLOTHING_KEY, defaultClothes);
-  const season = getCurrentSeason();
+  // 使用真实天气季节（如果已获取），否则使用月份估算
+  const season = currentWeather.season || getCurrentSeason();
   const owner = getCurrentOwner();
   const gender = owner === '爸爸' || owner === '儿子' ? 'men' : 'women';
 
@@ -2086,7 +2189,7 @@ function renderMainOutfit() {
     </div>
     <div class="outfit-items">${itemsHtml}</div>
     <div class="outfit-title">${outfit.styleName}风格 · ${outfit.template}</div>
-    <div class="outfit-subtitle">色彩和谐度 ${Math.round(outfit.harmonyScore * 100)}分 · 适合${seasonMap[getCurrentSeason()]}</div>
+    <div class="outfit-subtitle">${currentWeather.temp}°C · ${currentWeather.text} · 色彩和谐度 ${Math.round(outfit.harmonyScore * 100)}分</div>
     <div class="outfit-btn" style="display:flex;gap:10px">
       <button class="btn-gold" style="flex:1" onclick="confirmOutfit()">✓ 采纳搭配</button>
       <button class="btn-outline" style="flex:1;height:50px;border-radius:12px;font-size:13px" onclick="nextMainOutfit()">↻ 换一套</button>
@@ -2238,8 +2341,8 @@ initDefaultData();
 requestAnimationFrame(() => {
   document.getElementById('page-home').classList.add('visible');
   updateNav('home');
-  // 渲染首页AI推荐穿搭
-  renderHomeRecommendations();
+  // 获取天气并渲染推荐穿搭
+  fetchWeather();
 });
 </script>
 </body>
