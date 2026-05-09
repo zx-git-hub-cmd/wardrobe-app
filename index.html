@@ -178,13 +178,23 @@ body{
   background:var(--bg-card);border:1px solid var(--border-subtle);
   border-radius:var(--radius);cursor:pointer;transition:all 0.3s;
   box-shadow:0 2px 12px rgba(90,82,76,0.04);
+  position:relative;
 }
 .clothing-card:active{transform:scale(0.95)}
 .clothing-card .c-icon{font-size:30px;margin-bottom:10px}
+.clothing-card .c-image{
+  width:100%;height:70px;object-fit:cover;border-radius:8px;margin-bottom:8px;
+}
 .clothing-card .c-name{font-size:12px;font-weight:300;color:var(--text);text-align:center}
 .clothing-card .c-season{
   font-size:9px;font-weight:300;color:var(--gold);margin-top:6px;
   padding:2px 8px;border-radius:10px;border:1px solid rgba(196,167,125,0.3);
+}
+.clothing-card .c-status-tag{
+  position:absolute;top:8px;right:8px;
+  font-size:8px;font-weight:300;padding:2px 6px;border-radius:8px;
+  background:rgba(212,165,116,0.15);color:var(--warning);
+  border:1px solid rgba(212,165,116,0.3);
 }
 
 /* ===== OUTFIT DETAIL PAGE ===== */
@@ -238,11 +248,75 @@ body{
   border:1px dashed var(--border);border-radius:var(--radius-lg);
   background:var(--bg-card);cursor:pointer;transition:all 0.3s;
   box-shadow:0 2px 12px rgba(90,82,76,0.04);
+  overflow:hidden;
 }
 .upload-area:active{border-color:var(--gold);transform:scale(0.98)}
 .upload-area .upload-icon{font-size:36px;margin-bottom:10px}
 .upload-area .upload-text{font-size:12px;font-weight:200;color:var(--text-muted)}
 .upload-area .upload-hint{font-size:10px;font-weight:200;color:var(--text-muted);margin-top:4px;opacity:0.6}
+.upload-area.has-image{
+  border-style:solid;border-color:var(--border-subtle);
+}
+
+/* Image Preview */
+.image-preview-container{
+  display:none;flex-direction:column;align-items:center;
+  height:160px;margin:20px 0;
+  border-radius:var(--radius-lg);
+  background:var(--bg-card);
+  box-shadow:0 2px 12px rgba(90,82,76,0.04);
+  overflow:hidden;
+}
+.image-preview-container.show{display:flex}
+.image-preview-container .reselect-btn{
+  align-self:flex-end;margin:8px 12px 4px;
+  font-size:11px;font-weight:300;color:var(--text-secondary);
+  background:rgba(90,82,76,0.06);border:none;
+  padding:6px 14px;border-radius:16px;cursor:pointer;
+  transition:all 0.2s;
+}
+.image-preview-container .reselect-btn:active{transform:scale(0.95);color:var(--gold)}
+.image-preview-container .preview-image{
+  width:100%;max-height:200px;object-fit:contain;
+  border-radius:12px;margin:0 12px;
+}
+
+/* Upload Choice Modal */
+.upload-modal{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(90,82,76,0.3);z-index:9998;
+  display:none;align-items:flex-end;justify-content:center;
+  opacity:0;transition:opacity 0.3s;
+}
+.upload-modal.show{display:flex;opacity:1}
+.upload-modal-content{
+  background:#FFFFFF;border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  padding:24px 20px calc(24px + var(--safe-bottom));
+  width:100%;max-width:500px;
+  transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.upload-modal.show .upload-modal-content{transform:translateY(0)}
+.upload-modal-title{
+  font-size:16px;font-weight:300;color:var(--text);text-align:center;
+  margin-bottom:20px;
+}
+.upload-choice-btn{
+  display:flex;align-items:center;gap:14px;
+  width:100%;padding:16px 20px;margin-bottom:12px;
+  background:var(--bg);border:1px solid var(--border-subtle);
+  border-radius:var(--radius);cursor:pointer;transition:all 0.2s;
+}
+.upload-choice-btn:active{transform:scale(0.98);border-color:var(--gold)}
+.upload-choice-btn .choice-icon{font-size:24px}
+.upload-choice-btn .choice-text{font-size:14px;font-weight:300;color:var(--text)}
+.upload-choice-btn .choice-desc{font-size:11px;font-weight:200;color:var(--text-muted);margin-top:2px}
+.upload-modal-cancel{
+  width:100%;padding:14px;background:transparent;
+  border:1px solid var(--border);border-radius:var(--radius);
+  font-size:14px;font-weight:300;color:var(--text-secondary);
+  cursor:pointer;margin-top:8px;
+}
+.upload-modal-cancel:active{transform:scale(0.98)}
 
 .form-group{margin-bottom:18px}
 .form-label{font-size:11px;font-weight:300;color:var(--text-muted);letter-spacing:1px;margin-bottom:8px;display:block;text-transform:uppercase}
@@ -256,6 +330,7 @@ body{
 }
 .form-input:focus,.form-select:focus{border-color:var(--gold)}
 .form-input::placeholder{color:var(--text-muted)}
+.form-input.error{border-color:var(--warning)}
 .form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(90,82,76,0.4)' stroke-width='1.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
 .form-select option{background:#FFFFFF;color:var(--text)}
 
@@ -282,6 +357,74 @@ body{
 .status-btn.active-gray{border-color:rgba(90,82,76,0.15);color:var(--text-muted);background:rgba(90,82,76,0.04)}
 
 .save-btn{margin-top:28px}
+
+/* ===== CLOTHING DETAIL PAGE ===== */
+.detail-image-container{
+  display:flex;align-items:center;justify-content:center;
+  height:220px;margin:20px 0;
+  background:var(--bg-card);border-radius:var(--radius-lg);
+  border:1px solid var(--border-subtle);
+  overflow:hidden;
+}
+.detail-image-container .detail-image{
+  width:100%;height:100%;object-fit:contain;
+}
+.detail-image-container .detail-icon{
+  font-size:80px;
+}
+.detail-info-card{
+  margin:20px 0;padding:20px;
+  background:var(--bg-card);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);
+}
+.detail-info-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 0;border-bottom:1px solid var(--border-subtle);
+}
+.detail-info-row:last-child{border-bottom:none}
+.detail-info-row .info-label{font-size:12px;font-weight:300;color:var(--text-muted)}
+.detail-info-row .info-value{font-size:13px;font-weight:300;color:var(--text)}
+.detail-info-row .info-color{
+  display:flex;align-items:center;gap:8px;
+}
+.detail-info-row .color-preview{
+  width:20px;height:20px;border-radius:50%;
+  border:1px solid var(--border-subtle);
+}
+.detail-actions{
+  display:flex;gap:12px;margin-top:24px;
+}
+.detail-actions .btn-outline{flex:1;height:44px}
+.detail-actions .btn-delete{
+  background:rgba(196,120,106,0.08);border-color:rgba(196,120,106,0.3);
+  color:#C4786A;
+}
+.detail-actions .btn-delete:active{background:rgba(196,120,106,0.15)}
+
+/* ===== Delete Confirm Modal ===== */
+.confirm-modal{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(90,82,76,0.4);z-index:9999;
+  display:none;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.3s;
+}
+.confirm-modal.show{display:flex;opacity:1}
+.confirm-modal-content{
+  background:#FFFFFF;border-radius:var(--radius-lg);
+  padding:24px;margin:20px;max-width:320px;width:100%;
+  text-align:center;
+  transform:scale(0.9);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+.confirm-modal.show .confirm-modal-content{transform:scale(1)}
+.confirm-modal-title{font-size:16px;font-weight:300;color:var(--text);margin-bottom:8px}
+.confirm-modal-desc{font-size:13px;font-weight:200;color:var(--text-muted);margin-bottom:20px}
+.confirm-modal-btns{display:flex;gap:12px}
+.confirm-modal-btns .btn-outline{flex:1}
+.confirm-modal-btns .btn-confirm{
+  background:rgba(196,120,106,0.9);border-color:rgba(196,120,106,0.9);
+  color:#fff;
+}
+.confirm-modal-btns .btn-confirm:active{background:rgba(196,120,106,0.8)}
 
 /* ===== ALERTS PAGE ===== */
 .alert-card{
@@ -459,6 +602,40 @@ body{
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Upload Choice Modal -->
+<div class="upload-modal" id="uploadModal" onclick="closeUploadModal(event)">
+  <div class="upload-modal-content" onclick="event.stopPropagation()">
+    <div class="upload-modal-title">选择图片来源</div>
+    <div class="upload-choice-btn" onclick="openCamera()">
+      <span class="choice-icon">📷</span>
+      <div>
+        <div class="choice-text">拍照</div>
+        <div class="choice-desc">使用相机拍摄衣物照片</div>
+      </div>
+    </div>
+    <div class="upload-choice-btn" onclick="openGallery()">
+      <span class="choice-icon">🖼️</span>
+      <div>
+        <div class="choice-text">从相册选择</div>
+        <div class="choice-desc">从手机相册中选择照片</div>
+      </div>
+    </div>
+    <button class="upload-modal-cancel" onclick="closeUploadModal()">取消</button>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-modal-content">
+    <div class="confirm-modal-title">确认删除</div>
+    <div class="confirm-modal-desc">删除后无法恢复，确定要删除这件衣物吗？</div>
+    <div class="confirm-modal-btns">
+      <button class="btn-outline" onclick="closeConfirmModal()">取消</button>
+      <button class="btn-outline btn-confirm" onclick="confirmDelete()">删除</button>
+    </div>
+  </div>
+</div>
+
 <!-- Fullscreen Modal -->
 <div class="fullscreen-modal" id="fullscreenModal" onclick="closeFullscreen(event)">
   <button class="close-btn" onclick="closeFullscreen(event)">×</button>
@@ -591,6 +768,7 @@ body{
       <button class="filter-tab" data-filter="bottom">下装</button>
       <button class="filter-tab" data-filter="outer">外套</button>
       <button class="filter-tab" data-filter="shoes">鞋履</button>
+      <button class="filter-tab" data-filter="accessory">配饰</button>
     </div>
     <div class="clothing-grid" id="clothing-grid"></div>
   </div>
@@ -667,15 +845,25 @@ body{
       <h1>添加衣物</h1>
     </div>
 
-    <div class="upload-area" onclick="document.getElementById('file-input').click()">
+    <!-- Upload Area (shown when no image) -->
+    <div class="upload-area" id="uploadArea" onclick="showUploadModal()">
       <div class="upload-icon">📷</div>
       <div class="upload-text">点击拍照或上传图片</div>
       <div class="upload-hint">支持 JPG、PNG 格式</div>
     </div>
-    <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+
+    <!-- Image Preview (shown when image selected) -->
+    <div class="image-preview-container" id="imagePreviewContainer">
+      <button class="reselect-btn" onclick="showUploadModal()">重新选择</button>
+      <img class="preview-image" id="previewImage" src="" alt="预览图片">
+    </div>
+
+    <!-- Hidden file inputs -->
+    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleFileSelect(event)">
+    <input type="file" id="gallery-input" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
 
     <div class="form-group">
-      <label class="form-label">衣物名称</label>
+      <label class="form-label">衣物名称 *</label>
       <input type="text" class="form-input" id="cloth-name" placeholder="例如：白色衬衫">
     </div>
 
@@ -697,21 +885,23 @@ body{
         <option value="summer">夏季</option>
         <option value="autumn">秋季</option>
         <option value="winter">冬季</option>
-        <option value="all">四季</option>
+        <option value="all" selected>四季</option>
       </select>
     </div>
 
     <div class="form-group">
       <label class="form-label">颜色</label>
       <div class="color-picker" id="color-picker">
-        <div class="color-dot" data-color="#1565C0" style="background:#1565C0" onclick="selectColor(this)"></div>
-        <div class="color-dot" data-color="#212121" style="background:#212121" onclick="selectColor(this)"></div>
-        <div class="color-dot" data-color="#FAFAFA" style="background:#FAFAFA" onclick="selectColor(this)"></div>
-        <div class="color-dot" data-color="#757575" style="background:#757575" onclick="selectColor(this)"></div>
-        <div class="color-dot" data-color="#C62828" style="background:#C62828" onclick="selectColor(this)"></div>
-        <div class="color-dot" data-color="#F9A825" style="background:#F9A825" onclick="selectColor(this)"></div>
-        <div class="color-dot" data-color="#2E7D32" style="background:#2E7D32" onclick="selectColor(this)"></div>
-        <div class="color-dot" data-color="#5D4037" style="background:#5D4037" onclick="selectColor(this)"></div>
+        <div class="color-dot selected" data-color="#FFFFFF" data-name="白色" style="background:#FFFFFF;border:1px solid var(--border-subtle)" onclick="selectColor(this)"></div>
+        <div class="color-dot" data-color="#333333" data-name="黑色" style="background:#333333" onclick="selectColor(this)"></div>
+        <div class="color-dot" data-color="#999999" data-name="灰色" style="background:#999999" onclick="selectColor(this)"></div>
+        <div class="color-dot" data-color="#4A90D9" data-name="蓝色" style="background:#4A90D9" onclick="selectColor(this)"></div>
+        <div class="color-dot" data-color="#E74C3C" data-name="红色" style="background:#E74C3C" onclick="selectColor(this)"></div>
+        <div class="color-dot" data-color="#27AE60" data-name="绿色" style="background:#27AE60" onclick="selectColor(this)"></div>
+        <div class="color-dot" data-color="#F1C40F" data-name="黄色" style="background:#F1C40F" onclick="selectColor(this)"></div>
+        <div class="color-dot" data-color="#8B6914" data-name="棕色" style="background:#8B6914" onclick="selectColor(this)"></div>
+        <div class="color-dot" data-color="#E91E63" data-name="粉色" style="background:#E91E63" onclick="selectColor(this)"></div>
+        <div class="color-dot" data-color="#9B59B6" data-name="紫色" style="background:#9B59B6" onclick="selectColor(this)"></div>
       </div>
     </div>
 
@@ -725,6 +915,55 @@ body{
 
     <div class="save-btn">
       <button class="btn-gold" onclick="saveClothing()">保存到衣橱</button>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: CLOTHING DETAIL ===== -->
+  <div class="page" id="page-clothing-detail">
+    <div class="page-header">
+      <button class="back-btn" onclick="goBack()">‹</button>
+      <div class="en-label">ITEM DETAIL</div>
+      <h1>衣物详情</h1>
+    </div>
+
+    <div class="detail-image-container" id="detail-image-container">
+      <div class="detail-icon" id="detail-icon">👕</div>
+      <img class="detail-image" id="detail-image" src="" alt="衣物图片" style="display:none">
+    </div>
+
+    <div class="detail-info-card">
+      <div class="detail-info-row">
+        <span class="info-label">名称</span>
+        <span class="info-value" id="detail-name">-</span>
+      </div>
+      <div class="detail-info-row">
+        <span class="info-label">类别</span>
+        <span class="info-value" id="detail-category">-</span>
+      </div>
+      <div class="detail-info-row">
+        <span class="info-label">季节</span>
+        <span class="info-value" id="detail-season">-</span>
+      </div>
+      <div class="detail-info-row">
+        <span class="info-label">颜色</span>
+        <div class="info-color">
+          <div class="color-preview" id="detail-color-preview"></div>
+          <span class="info-value" id="detail-color">-</span>
+        </div>
+      </div>
+      <div class="detail-info-row">
+        <span class="info-label">状态</span>
+        <span class="info-value" id="detail-status">-</span>
+      </div>
+      <div class="detail-info-row">
+        <span class="info-label">添加日期</span>
+        <span class="info-value" id="detail-date">-</span>
+      </div>
+    </div>
+
+    <div class="detail-actions">
+      <button class="btn-outline" onclick="editClothing()">✎ 编辑</button>
+      <button class="btn-outline btn-delete" onclick="deleteClothing()">✕ 删除</button>
     </div>
   </div>
 
@@ -885,55 +1124,56 @@ const STORAGE_KEY = 'wardrobe_app_data';
 const CLOTHING_KEY = 'wardrobe_clothes';
 const ALERTS_KEY = 'wardrobe_alerts';
 
+// 默认衣物数据
 const defaultClothes = [
-  {id:1,name:'白色衬衫',category:'top',season:'spring',color:'#FAFAFA',icon:'👔',status:'frequent'},
-  {id:2,name:'蓝色衬衫',category:'top',season:'summer',color:'#1565C0',icon:'👔',status:'frequent'},
-  {id:3,name:'黑色T恤',category:'top',season:'summer',color:'#212121',icon:'👕',status:'frequent'},
-  {id:4,name:'灰色卫衣',category:'top',season:'autumn',color:'#757575',icon:'🧥',status:'frequent'},
-  {id:5,name:'红色Polo衫',category:'top',season:'summer',color:'#C62828',icon:'👕',status:'frequent'},
-  {id:6,name:'深蓝西装',category:'outer',season:'autumn',color:'#1565C0',icon:'🧥',status:'frequent'},
-  {id:7,name:'卡其风衣',category:'outer',season:'spring',color:'#F9A825',icon:'🧥',status:'frequent'},
-  {id:8,name:'黑色大衣',category:'outer',season:'winter',color:'#212121',icon:'🧥',status:'frequent'},
-  {id:9,name:'深色西裤',category:'bottom',season:'all',color:'#212121',icon:'👖',status:'frequent'},
-  {id:10,name:'牛仔裤',category:'bottom',season:'all',color:'#1565C0',icon:'👖',status:'frequent'},
-  {id:11,name:'卡其裤',category:'bottom',season:'spring',color:'#F9A825',icon:'👖',status:'frequent'},
-  {id:12,name:'黑色短裤',category:'bottom',season:'summer',color:'#212121',icon:'🩳',status:'frequent'},
-  {id:13,name:'棕色皮鞋',category:'shoes',season:'autumn',color:'#5D4037',icon:'👞',status:'frequent'},
-  {id:14,name:'白色运动鞋',category:'shoes',season:'all',color:'#FAFAFA',icon:'👟',status:'frequent'},
-  {id:15,name:'黑色靴子',category:'shoes',season:'winter',color:'#212121',icon:'🥾',status:'frequent'},
-  {id:16,name:'灰色运动鞋',category:'shoes',season:'all',color:'#757575',icon:'👟',status:'frequent'},
-  {id:17,name:'条纹衬衫',category:'top',season:'spring',color:'#1565C0',icon:'👔',status:'frequent'},
-  {id:18,name:'绿色针织衫',category:'top',season:'autumn',color:'#2E7D32',icon:'🧶',status:'frequent'},
-  {id:19,name:'米色休闲裤',category:'bottom',season:'summer',color:'#F9A825',icon:'👖',status:'frequent'},
-  {id:20,name:'深灰西裤',category:'bottom',season:'all',color:'#757575',icon:'👖',status:'frequent'},
-  {id:21,name:'牛仔外套',category:'outer',season:'spring',color:'#1565C0',icon:'🧥',status:'frequent'},
-  {id:22,name:'羽绒服',category:'outer',season:'winter',color:'#212121',icon:'🧥',status:'frequent'},
-  {id:23,name:'皮夹克',category:'outer',season:'autumn',color:'#212121',icon:'🧥',status:'frequent'},
-  {id:24,name:'帆布鞋',category:'shoes',season:'spring',color:'#FAFAFA',icon:'👟',status:'frequent'},
-  {id:25,name:'乐福鞋',category:'shoes',season:'summer',color:'#5D4037',icon:'👞',status:'frequent'},
-  {id:26,name:'黑色正装鞋',category:'shoes',season:'all',color:'#212121',icon:'👞',status:'frequent'},
-  {id:27,name:'白色衬衫2',category:'top',season:'all',color:'#FAFAFA',icon:'👔',status:'frequent'},
-  {id:28,name:'黑色高领',category:'top',season:'winter',color:'#212121',icon:'🧶',status:'frequent'},
-  {id:29,name:'运动长裤',category:'bottom',season:'all',color:'#212121',icon:'👖',status:'frequent'},
-  {id:30,name:'工装裤',category:'bottom',season:'autumn',color:'#5D4037',icon:'👖',status:'frequent'},
-  {id:31,name:'连帽卫衣',category:'top',season:'autumn',color:'#757575',icon:'👕',status:'frequent'},
-  {id:32,name:'格子衬衫',category:'top',season:'autumn',color:'#C62828',icon:'👔',status:'frequent'},
-  {id:33,name:'亚麻衬衫',category:'top',season:'summer',color:'#F9A825',icon:'👔',status:'frequent'},
-  {id:34,name:'灯芯绒裤',category:'bottom',season:'winter',color:'#5D4037',icon:'👖',status:'frequent'},
-  {id:35,name:'运动短裤',category:'bottom',season:'summer',color:'#212121',icon:'🩳',status:'frequent'},
-  {id:36,name:'西装马甲',category:'top',season:'autumn',color:'#212121',icon:'🦺',status:'frequent'},
-  {id:37,name:'冲锋衣',category:'outer',season:'spring',color:'#2E7D32',icon:'🧥',status:'frequent'},
-  {id:38,name:'针织开衫',category:'outer',season:'spring',color:'#F9A825',icon:'🧶',status:'frequent'},
-  {id:39,name:'切尔西靴',category:'shoes',season:'autumn',color:'#212121',icon:'🥾',status:'frequent'},
-  {id:40,name:'凉鞋',category:'shoes',season:'summer',color:'#5D4037',icon:'🩴',status:'frequent'},
-  {id:41,name:'拖鞋',category:'shoes',season:'summer',color:'#212121',icon:'🩴',status:'frequent'},
-  {id:42,name:'丝巾',category:'accessory',season:'spring',color:'#C62828',icon:'🧣',status:'frequent'},
-  {id:43,name:'皮带',category:'accessory',season:'all',color:'#5D4037',icon:'🪢',status:'frequent'},
-  {id:44,name:'棒球帽',category:'accessory',season:'summer',color:'#1565C0',icon:'🧢',status:'frequent'},
-  {id:45,name:'领带',category:'accessory',season:'all',color:'#C62828',icon:'🎀',status:'frequent'},
-  {id:46,name:'旧牛仔裤',category:'bottom',season:'all',color:'#1565C0',icon:'👖',status:'outdated'},
-  {id:47,name:'褪色T恤',category:'top',season:'summer',color:'#757575',icon:'👕',status:'outdated'},
-  {id:48,name:'不合身西装',category:'outer',season:'autumn',color:'#212121',icon:'🧥',status:'outdated'},
+  {id:1,name:'白色衬衫',category:'top',season:'spring',color:'#FFFFFF',colorName:'白色',icon:'👔',status:'frequent'},
+  {id:2,name:'蓝色衬衫',category:'top',season:'summer',color:'#4A90D9',colorName:'蓝色',icon:'👔',status:'frequent'},
+  {id:3,name:'黑色T恤',category:'top',season:'summer',color:'#333333',colorName:'黑色',icon:'👕',status:'frequent'},
+  {id:4,name:'灰色卫衣',category:'top',season:'autumn',color:'#999999',colorName:'灰色',icon:'🧥',status:'frequent'},
+  {id:5,name:'红色Polo衫',category:'top',season:'summer',color:'#E74C3C',colorName:'红色',icon:'👕',status:'frequent'},
+  {id:6,name:'深蓝西装',category:'outer',season:'autumn',color:'#4A90D9',colorName:'蓝色',icon:'🧥',status:'frequent'},
+  {id:7,name:'卡其风衣',category:'outer',season:'spring',color:'#F1C40F',colorName:'黄色',icon:'🧥',status:'frequent'},
+  {id:8,name:'黑色大衣',category:'outer',season:'winter',color:'#333333',colorName:'黑色',icon:'🧥',status:'frequent'},
+  {id:9,name:'深色西裤',category:'bottom',season:'all',color:'#333333',colorName:'黑色',icon:'👖',status:'frequent'},
+  {id:10,name:'牛仔裤',category:'bottom',season:'all',color:'#4A90D9',colorName:'蓝色',icon:'👖',status:'frequent'},
+  {id:11,name:'卡其裤',category:'bottom',season:'spring',color:'#F1C40F',colorName:'黄色',icon:'👖',status:'frequent'},
+  {id:12,name:'黑色短裤',category:'bottom',season:'summer',color:'#333333',colorName:'黑色',icon:'🩳',status:'frequent'},
+  {id:13,name:'棕色皮鞋',category:'shoes',season:'autumn',color:'#8B6914',colorName:'棕色',icon:'👞',status:'frequent'},
+  {id:14,name:'白色运动鞋',category:'shoes',season:'all',color:'#FFFFFF',colorName:'白色',icon:'👟',status:'frequent'},
+  {id:15,name:'黑色靴子',category:'shoes',season:'winter',color:'#333333',colorName:'黑色',icon:'🥾',status:'frequent'},
+  {id:16,name:'灰色运动鞋',category:'shoes',season:'all',color:'#999999',colorName:'灰色',icon:'👟',status:'frequent'},
+  {id:17,name:'条纹衬衫',category:'top',season:'spring',color:'#4A90D9',colorName:'蓝色',icon:'👔',status:'frequent'},
+  {id:18,name:'绿色针织衫',category:'top',season:'autumn',color:'#27AE60',colorName:'绿色',icon:'🧶',status:'frequent'},
+  {id:19,name:'米色休闲裤',category:'bottom',season:'summer',color:'#F1C40F',colorName:'黄色',icon:'👖',status:'frequent'},
+  {id:20,name:'深灰西裤',category:'bottom',season:'all',color:'#999999',colorName:'灰色',icon:'👖',status:'frequent'},
+  {id:21,name:'牛仔外套',category:'outer',season:'spring',color:'#4A90D9',colorName:'蓝色',icon:'🧥',status:'frequent'},
+  {id:22,name:'羽绒服',category:'outer',season:'winter',color:'#333333',colorName:'黑色',icon:'🧥',status:'frequent'},
+  {id:23,name:'皮夹克',category:'outer',season:'autumn',color:'#333333',colorName:'黑色',icon:'🧥',status:'frequent'},
+  {id:24,name:'帆布鞋',category:'shoes',season:'spring',color:'#FFFFFF',colorName:'白色',icon:'👟',status:'frequent'},
+  {id:25,name:'乐福鞋',category:'shoes',season:'summer',color:'#8B6914',colorName:'棕色',icon:'👞',status:'frequent'},
+  {id:26,name:'黑色正装鞋',category:'shoes',season:'all',color:'#333333',colorName:'黑色',icon:'👞',status:'frequent'},
+  {id:27,name:'白色衬衫2',category:'top',season:'all',color:'#FFFFFF',colorName:'白色',icon:'👔',status:'frequent'},
+  {id:28,name:'黑色高领',category:'top',season:'winter',color:'#333333',colorName:'黑色',icon:'🧶',status:'frequent'},
+  {id:29,name:'运动长裤',category:'bottom',season:'all',color:'#333333',colorName:'黑色',icon:'👖',status:'frequent'},
+  {id:30,name:'工装裤',category:'bottom',season:'autumn',color:'#8B6914',colorName:'棕色',icon:'👖',status:'frequent'},
+  {id:31,name:'连帽卫衣',category:'top',season:'autumn',color:'#999999',colorName:'灰色',icon:'👕',status:'frequent'},
+  {id:32,name:'格子衬衫',category:'top',season:'autumn',color:'#E74C3C',colorName:'红色',icon:'👔',status:'frequent'},
+  {id:33,name:'亚麻衬衫',category:'top',season:'summer',color:'#F1C40F',colorName:'黄色',icon:'👔',status:'frequent'},
+  {id:34,name:'灯芯绒裤',category:'bottom',season:'winter',color:'#8B6914',colorName:'棕色',icon:'👖',status:'frequent'},
+  {id:35,name:'运动短裤',category:'bottom',season:'summer',color:'#333333',colorName:'黑色',icon:'🩳',status:'frequent'},
+  {id:36,name:'西装马甲',category:'top',season:'autumn',color:'#333333',colorName:'黑色',icon:'🦺',status:'frequent'},
+  {id:37,name:'冲锋衣',category:'outer',season:'spring',color:'#27AE60',colorName:'绿色',icon:'🧥',status:'frequent'},
+  {id:38,name:'针织开衫',category:'outer',season:'spring',color:'#F1C40F',colorName:'黄色',icon:'🧶',status:'frequent'},
+  {id:39,name:'切尔西靴',category:'shoes',season:'autumn',color:'#333333',colorName:'黑色',icon:'🥾',status:'frequent'},
+  {id:40,name:'凉鞋',category:'shoes',season:'summer',color:'#8B6914',colorName:'棕色',icon:'🩴',status:'frequent'},
+  {id:41,name:'拖鞋',category:'shoes',season:'summer',color:'#333333',colorName:'黑色',icon:'🩴',status:'frequent'},
+  {id:42,name:'丝巾',category:'accessory',season:'spring',color:'#E74C3C',colorName:'红色',icon:'🧣',status:'frequent'},
+  {id:43,name:'皮带',category:'accessory',season:'all',color:'#8B6914',colorName:'棕色',icon:'🪢',status:'frequent'},
+  {id:44,name:'棒球帽',category:'accessory',season:'summer',color:'#4A90D9',colorName:'蓝色',icon:'🧢',status:'frequent'},
+  {id:45,name:'领带',category:'accessory',season:'all',color:'#E74C3C',colorName:'红色',icon:'🎀',status:'frequent'},
+  {id:46,name:'旧牛仔裤',category:'bottom',season:'all',color:'#4A90D9',colorName:'蓝色',icon:'👖',status:'outdated'},
+  {id:47,name:'褪色T恤',category:'top',season:'summer',color:'#999999',colorName:'灰色',icon:'👕',status:'outdated'},
+  {id:48,name:'不合身西装',category:'outer',season:'autumn',color:'#333333',colorName:'黑色',icon:'🧥',status:'outdated'},
 ];
 
 const defaultAlerts = [
@@ -942,6 +1182,7 @@ const defaultAlerts = [
   {id:3,clothId:46,name:'旧牛仔裤',icon:'👖',status:'yellow',statusText:'需清洗',suggestion:'超过30天未穿着，建议清洗后收纳'},
 ];
 
+// 数据存取函数
 function getData(key, defaultVal) {
   try {
     const d = localStorage.getItem(key);
@@ -1001,6 +1242,7 @@ function navigateTo(page) {
     if (page === 'wardrobe') renderWardrobe();
     if (page === 'alerts') renderAlerts();
     if (page === 'stats') updateStats();
+    if (page === 'add') resetAddForm();
   }, 180);
 }
 
@@ -1051,6 +1293,11 @@ function closeFullscreen(e) {
 // ===== Wardrobe Page =====
 let currentFilter = 'all';
 
+// 类别和季节映射
+const categoryMap = {top:'上装',bottom:'下装',outer:'外套',shoes:'鞋履',accessory:'配饰'};
+const seasonMap = {spring:'春季',summer:'夏季',autumn:'秋季',winter:'冬季',all:'四季'};
+const categoryIcons = {top:'👔',bottom:'👖',outer:'🧥',shoes:'👟',accessory:'🧣'};
+
 function renderWardrobe() {
   const clothes = getData(CLOTHING_KEY, defaultClothes);
   const filtered = currentFilter === 'all' ? clothes : clothes.filter(c => c.category === currentFilter);
@@ -1060,15 +1307,21 @@ function renderWardrobe() {
   const total = clothes.length;
   countEl.textContent = total + '件珍藏单品';
 
-  const seasonMap = {spring:'春',summer:'夏',autumn:'秋',winter:'冬',all:'四季'};
-
-  grid.innerHTML = filtered.map(c => `
-    <div class="clothing-card fade-in" onclick="viewClothingDetail(${c.id})">
-      <div class="c-icon">${c.icon || '👕'}</div>
-      <div class="c-name">${c.name}</div>
-      <div class="c-season">${seasonMap[c.season] || c.season}</div>
-    </div>
-  `).join('');
+  grid.innerHTML = filtered.map(c => {
+    const hasImage = c.image && c.image.length > 0;
+    const isOutdated = c.status === 'outdated';
+    return `
+      <div class="clothing-card fade-in" onclick="viewClothingDetail('${c.id}')">
+        ${isOutdated ? '<div class="c-status-tag">过时</div>' : ''}
+        ${hasImage 
+          ? `<img class="c-image" src="${c.image}" alt="${c.name}">`
+          : `<div class="c-icon">${c.icon || categoryIcons[c.category] || '👕'}</div>`
+        }
+        <div class="c-name">${c.name}</div>
+        <div class="c-season">${seasonMap[c.season] || c.season}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 // Filter tabs
@@ -1081,8 +1334,78 @@ document.getElementById('filter-tabs').addEventListener('click', function(e) {
   renderWardrobe();
 });
 
+// 当前查看的衣物ID
+let currentClothingId = null;
+
 function viewClothingDetail(id) {
-  showToast('查看衣物详情：' + id);
+  currentClothingId = id;
+  const clothes = getData(CLOTHING_KEY, defaultClothes);
+  const item = clothes.find(c => String(c.id) === String(id));
+  
+  if (!item) {
+    showToast('未找到该衣物');
+    return;
+  }
+
+  // 更新详情页内容
+  const detailImage = document.getElementById('detail-image');
+  const detailIcon = document.getElementById('detail-icon');
+  const imageContainer = document.getElementById('detail-image-container');
+
+  if (item.image && item.image.length > 0) {
+    detailImage.src = item.image;
+    detailImage.style.display = 'block';
+    detailIcon.style.display = 'none';
+    imageContainer.style.background = '#fff';
+  } else {
+    detailImage.style.display = 'none';
+    detailIcon.style.display = 'block';
+    detailIcon.textContent = item.icon || categoryIcons[item.category] || '👕';
+  }
+
+  document.getElementById('detail-name').textContent = item.name;
+  document.getElementById('detail-category').textContent = categoryMap[item.category] || item.category;
+  document.getElementById('detail-season').textContent = seasonMap[item.season] || item.season;
+  document.getElementById('detail-color').textContent = item.colorName || '未知';
+  document.getElementById('detail-color-preview').style.background = item.color || '#ccc';
+  document.getElementById('detail-status').textContent = item.status === 'outdated' ? '过时/不合身' : '常穿';
+  document.getElementById('detail-date').textContent = item.addedDate || '未知';
+
+  navigateTo('clothing-detail');
+}
+
+function editClothing() {
+  showToast('编辑功能开发中');
+}
+
+// 删除确认
+let deleteTargetId = null;
+
+function deleteClothing() {
+  deleteTargetId = currentClothingId;
+  document.getElementById('confirmModal').classList.add('show');
+}
+
+function closeConfirmModal() {
+  document.getElementById('confirmModal').classList.remove('show');
+  deleteTargetId = null;
+}
+
+function confirmDelete() {
+  if (!deleteTargetId) return;
+  
+  const clothes = getData(CLOTHING_KEY, defaultClothes);
+  const idx = clothes.findIndex(c => String(c.id) === String(deleteTargetId));
+  
+  if (idx !== -1) {
+    const deletedName = clothes[idx].name;
+    clothes.splice(idx, 1);
+    setData(CLOTHING_KEY, clothes);
+    showToast('"' + deletedName + '" 已删除');
+  }
+  
+  closeConfirmModal();
+  setTimeout(() => goBack(), 300);
 }
 
 // ===== Outfit Detail =====
@@ -1095,15 +1418,102 @@ function confirmOutfit() {
 }
 
 // ===== Add Clothing Page =====
-let selectedColor = '';
+let selectedColor = '#FFFFFF';
+let selectedColorName = '白色';
 let selectedStatus = 'frequent';
+let selectedImageBase64 = '';
 
+// 显示上传选择弹窗
+function showUploadModal() {
+  document.getElementById('uploadModal').classList.add('show');
+}
+
+// 关闭上传选择弹窗
+function closeUploadModal(e) {
+  if (e && e.target !== document.getElementById('uploadModal')) return;
+  document.getElementById('uploadModal').classList.remove('show');
+}
+
+// 打开相机
+function openCamera() {
+  closeUploadModal();
+  document.getElementById('camera-input').click();
+}
+
+// 打开相册
+function openGallery() {
+  closeUploadModal();
+  document.getElementById('gallery-input').click();
+}
+
+// 处理文件选择
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    showToast('请选择图片文件');
+    return;
+  }
+
+  // 压缩并转为Base64
+  compressImage(file, function(base64) {
+    selectedImageBase64 = base64;
+    
+    // 显示预览
+    document.getElementById('previewImage').src = base64;
+    document.getElementById('uploadArea').style.display = 'none';
+    document.getElementById('imagePreviewContainer').classList.add('show');
+  });
+
+  // 清空input以便重复选择同一文件
+  e.target.value = '';
+}
+
+// 图片压缩函数
+function compressImage(file, callback) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // 最大宽度800px
+      const maxWidth = 800;
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // 绘制并压缩
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // 转为JPEG格式，质量0.8
+      const base64 = canvas.toDataURL('image/jpeg', 0.8);
+      callback(base64);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// 选择颜色
 function selectColor(el) {
   document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
   el.classList.add('selected');
   selectedColor = el.dataset.color;
+  selectedColorName = el.dataset.name || '未知';
 }
 
+// 切换状态
 function toggleStatus(el, status) {
   const freq = document.getElementById('status-frequent');
   const outd = document.getElementById('status-outdated');
@@ -1118,52 +1528,113 @@ function toggleStatus(el, status) {
   }
 }
 
-function handleFileSelect(e) {
-  const file = e.target.files[0];
-  if (file) {
-    showToast('已选择图片：' + file.name);
-  }
+// 生成唯一ID
+function generateId() {
+  const now = new Date();
+  const dateStr = now.getFullYear().toString() +
+    (now.getMonth() + 1).toString().padStart(2, '0') +
+    now.getDate().toString().padStart(2, '0');
+  const randomStr = Math.random().toString(36).substring(2, 8);
+  return 'cloth_' + dateStr + '_' + randomStr;
 }
 
-const categoryIcons = {top:'👔',bottom:'👖',outer:'🧥',shoes:'👟',accessory:'🧣'};
+// 获取当前日期
+function getCurrentDate() {
+  const now = new Date();
+  return now.getFullYear() + '-' +
+    (now.getMonth() + 1).toString().padStart(2, '0') + '-' +
+    now.getDate().toString().padStart(2, '0');
+}
 
+// 获取当前选中的家庭成员
+function getCurrentOwner() {
+  const activeMember = document.querySelector('.family-member.active');
+  return activeMember ? activeMember.dataset.name : '妈妈';
+}
+
+// 保存衣物
 function saveClothing() {
-  const name = document.getElementById('cloth-name').value.trim();
+  const nameInput = document.getElementById('cloth-name');
+  const name = nameInput.value.trim();
   const category = document.getElementById('cloth-category').value;
   const season = document.getElementById('cloth-season').value;
 
+  // 验证
+  let hasError = false;
+  
+  if (!selectedImageBase64) {
+    showToast('请选择或拍摄衣物图片');
+    hasError = true;
+  }
+  
   if (!name) {
-    showToast('请输入衣物名称');
-    return;
+    nameInput.classList.add('error');
+    if (!hasError) showToast('请输入衣物名称');
+    hasError = true;
+  } else {
+    nameInput.classList.remove('error');
   }
 
-  const clothes = getData(CLOTHING_KEY, defaultClothes);
-  const newId = clothes.length > 0 ? Math.max(...clothes.map(c => c.id)) + 1 : 1;
+  if (hasError) return;
 
+  // 获取现有衣物数据
+  const clothes = getData(CLOTHING_KEY, defaultClothes);
+  
+  // 创建新衣物对象
   const newItem = {
-    id: newId,
+    id: generateId(),
     name: name,
     category: category,
+    color: selectedColor,
+    colorName: selectedColorName,
     season: season,
-    color: selectedColor || '#212121',
-    icon: categoryIcons[category] || '👕',
-    status: selectedStatus
+    status: selectedStatus,
+    image: selectedImageBase64,
+    addedDate: getCurrentDate(),
+    wearCount: 0,
+    owner: getCurrentOwner()
   };
 
+  // 保存到localStorage
   clothes.push(newItem);
   setData(CLOTHING_KEY, clothes);
 
-  // Reset form
+  // 显示成功提示
+  showToast('保存成功');
+
+  // 跳转到衣橱页面
+  setTimeout(() => navigateTo('wardrobe'), 600);
+}
+
+// 重置添加表单
+function resetAddForm() {
+  // 重置图片
+  selectedImageBase64 = '';
+  document.getElementById('uploadArea').style.display = 'flex';
+  document.getElementById('imagePreviewContainer').classList.remove('show');
+  document.getElementById('previewImage').src = '';
+
+  // 重置表单
   document.getElementById('cloth-name').value = '';
-  document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
-  selectedColor = '';
+  document.getElementById('cloth-name').classList.remove('error');
+  document.getElementById('cloth-category').value = 'top';
+  document.getElementById('cloth-season').value = 'all';
+
+  // 重置颜色选择
+  document.querySelectorAll('.color-dot').forEach((d, i) => {
+    if (i === 0) {
+      d.classList.add('selected');
+    } else {
+      d.classList.remove('selected');
+    }
+  });
+  selectedColor = '#FFFFFF';
+  selectedColorName = '白色';
+
+  // 重置状态
   document.getElementById('status-frequent').className = 'status-btn active-green';
   document.getElementById('status-outdated').className = 'status-btn';
   selectedStatus = 'frequent';
-
-  showToast('"' + name + '" 已保存到衣橱');
-
-  setTimeout(() => navigateTo('wardrobe'), 600);
 }
 
 // ===== Alerts Page =====
