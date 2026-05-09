@@ -762,6 +762,11 @@ body{
       <h1>我的衣橱</h1>
       <div class="sub" id="wardrobe-count">48件珍藏单品</div>
     </div>
+    <div class="filter-tabs" id="gender-tabs">
+      <button class="filter-tab active" data-gender="all">全部</button>
+      <button class="filter-tab" data-gender="women">👗 女装</button>
+      <button class="filter-tab" data-gender="men">👔 男装</button>
+    </div>
     <div class="filter-tabs" id="filter-tabs">
       <button class="filter-tab active" data-filter="all">全部</button>
       <button class="filter-tab" data-filter="top">上装</button>
@@ -769,6 +774,9 @@ body{
       <button class="filter-tab" data-filter="outer">外套</button>
       <button class="filter-tab" data-filter="shoes">鞋履</button>
       <button class="filter-tab" data-filter="accessory">配饰</button>
+    </div>
+    <div class="filter-tabs" id="style-tabs">
+      <button class="filter-tab active" data-style="all">全部风格</button>
     </div>
     <div class="clothing-grid" id="clothing-grid"></div>
   </div>
@@ -959,6 +967,10 @@ body{
         <span class="info-label">添加日期</span>
         <span class="info-value" id="detail-date">-</span>
       </div>
+      <div class="detail-info-row" id="detail-extra-row" style="display:none">
+        <span class="info-label">风格</span>
+        <span class="info-value" id="detail-extra-info" style="color:var(--gold)">-</span>
+      </div>
     </div>
 
     <div class="detail-actions">
@@ -1124,62 +1136,106 @@ const STORAGE_KEY = 'wardrobe_app_data';
 const CLOTHING_KEY = 'wardrobe_clothes';
 const ALERTS_KEY = 'wardrobe_alerts';
 
-// 默认衣物数据
+// 风格映射
+const styleMap = {
+  casual:'休闲松弛',business:'商务智感',sport:'运动活力',
+  retro:'复古经典',french:'法式优雅',japanese:'日系简约',
+  korean:'韩系时尚',street:'街头潮流',romantic:'柔美浪漫',resort:'度假自然',
+  workwear:'复古工装',denim:'牛仔单宁',classic:'古典正装',preppy:'学院风'
+};
+const genderMap = {women:'女装',men:'男装',unisex:'中性'};
+
+// 默认衣物数据 — 女装20件 + 男装20件
 const defaultClothes = [
-  {id:1,name:'白色衬衫',category:'top',season:'spring',color:'#FFFFFF',colorName:'白色',icon:'👔',status:'frequent'},
-  {id:2,name:'蓝色衬衫',category:'top',season:'summer',color:'#4A90D9',colorName:'蓝色',icon:'👔',status:'frequent'},
-  {id:3,name:'黑色T恤',category:'top',season:'summer',color:'#333333',colorName:'黑色',icon:'👕',status:'frequent'},
-  {id:4,name:'灰色卫衣',category:'top',season:'autumn',color:'#999999',colorName:'灰色',icon:'🧥',status:'frequent'},
-  {id:5,name:'红色Polo衫',category:'top',season:'summer',color:'#E74C3C',colorName:'红色',icon:'👕',status:'frequent'},
-  {id:6,name:'深蓝西装',category:'outer',season:'autumn',color:'#4A90D9',colorName:'蓝色',icon:'🧥',status:'frequent'},
-  {id:7,name:'卡其风衣',category:'outer',season:'spring',color:'#F1C40F',colorName:'黄色',icon:'🧥',status:'frequent'},
-  {id:8,name:'黑色大衣',category:'outer',season:'winter',color:'#333333',colorName:'黑色',icon:'🧥',status:'frequent'},
-  {id:9,name:'深色西裤',category:'bottom',season:'all',color:'#333333',colorName:'黑色',icon:'👖',status:'frequent'},
-  {id:10,name:'牛仔裤',category:'bottom',season:'all',color:'#4A90D9',colorName:'蓝色',icon:'👖',status:'frequent'},
-  {id:11,name:'卡其裤',category:'bottom',season:'spring',color:'#F1C40F',colorName:'黄色',icon:'👖',status:'frequent'},
-  {id:12,name:'黑色短裤',category:'bottom',season:'summer',color:'#333333',colorName:'黑色',icon:'🩳',status:'frequent'},
-  {id:13,name:'棕色皮鞋',category:'shoes',season:'autumn',color:'#8B6914',colorName:'棕色',icon:'👞',status:'frequent'},
-  {id:14,name:'白色运动鞋',category:'shoes',season:'all',color:'#FFFFFF',colorName:'白色',icon:'👟',status:'frequent'},
-  {id:15,name:'黑色靴子',category:'shoes',season:'winter',color:'#333333',colorName:'黑色',icon:'🥾',status:'frequent'},
-  {id:16,name:'灰色运动鞋',category:'shoes',season:'all',color:'#999999',colorName:'灰色',icon:'👟',status:'frequent'},
-  {id:17,name:'条纹衬衫',category:'top',season:'spring',color:'#4A90D9',colorName:'蓝色',icon:'👔',status:'frequent'},
-  {id:18,name:'绿色针织衫',category:'top',season:'autumn',color:'#27AE60',colorName:'绿色',icon:'🧶',status:'frequent'},
-  {id:19,name:'米色休闲裤',category:'bottom',season:'summer',color:'#F1C40F',colorName:'黄色',icon:'👖',status:'frequent'},
-  {id:20,name:'深灰西裤',category:'bottom',season:'all',color:'#999999',colorName:'灰色',icon:'👖',status:'frequent'},
-  {id:21,name:'牛仔外套',category:'outer',season:'spring',color:'#4A90D9',colorName:'蓝色',icon:'🧥',status:'frequent'},
-  {id:22,name:'羽绒服',category:'outer',season:'winter',color:'#333333',colorName:'黑色',icon:'🧥',status:'frequent'},
-  {id:23,name:'皮夹克',category:'outer',season:'autumn',color:'#333333',colorName:'黑色',icon:'🧥',status:'frequent'},
-  {id:24,name:'帆布鞋',category:'shoes',season:'spring',color:'#FFFFFF',colorName:'白色',icon:'👟',status:'frequent'},
-  {id:25,name:'乐福鞋',category:'shoes',season:'summer',color:'#8B6914',colorName:'棕色',icon:'👞',status:'frequent'},
-  {id:26,name:'黑色正装鞋',category:'shoes',season:'all',color:'#333333',colorName:'黑色',icon:'👞',status:'frequent'},
-  {id:27,name:'白色衬衫2',category:'top',season:'all',color:'#FFFFFF',colorName:'白色',icon:'👔',status:'frequent'},
-  {id:28,name:'黑色高领',category:'top',season:'winter',color:'#333333',colorName:'黑色',icon:'🧶',status:'frequent'},
-  {id:29,name:'运动长裤',category:'bottom',season:'all',color:'#333333',colorName:'黑色',icon:'👖',status:'frequent'},
-  {id:30,name:'工装裤',category:'bottom',season:'autumn',color:'#8B6914',colorName:'棕色',icon:'👖',status:'frequent'},
-  {id:31,name:'连帽卫衣',category:'top',season:'autumn',color:'#999999',colorName:'灰色',icon:'👕',status:'frequent'},
-  {id:32,name:'格子衬衫',category:'top',season:'autumn',color:'#E74C3C',colorName:'红色',icon:'👔',status:'frequent'},
-  {id:33,name:'亚麻衬衫',category:'top',season:'summer',color:'#F1C40F',colorName:'黄色',icon:'👔',status:'frequent'},
-  {id:34,name:'灯芯绒裤',category:'bottom',season:'winter',color:'#8B6914',colorName:'棕色',icon:'👖',status:'frequent'},
-  {id:35,name:'运动短裤',category:'bottom',season:'summer',color:'#333333',colorName:'黑色',icon:'🩳',status:'frequent'},
-  {id:36,name:'西装马甲',category:'top',season:'autumn',color:'#333333',colorName:'黑色',icon:'🦺',status:'frequent'},
-  {id:37,name:'冲锋衣',category:'outer',season:'spring',color:'#27AE60',colorName:'绿色',icon:'🧥',status:'frequent'},
-  {id:38,name:'针织开衫',category:'outer',season:'spring',color:'#F1C40F',colorName:'黄色',icon:'🧶',status:'frequent'},
-  {id:39,name:'切尔西靴',category:'shoes',season:'autumn',color:'#333333',colorName:'黑色',icon:'🥾',status:'frequent'},
-  {id:40,name:'凉鞋',category:'shoes',season:'summer',color:'#8B6914',colorName:'棕色',icon:'🩴',status:'frequent'},
-  {id:41,name:'拖鞋',category:'shoes',season:'summer',color:'#333333',colorName:'黑色',icon:'🩴',status:'frequent'},
-  {id:42,name:'丝巾',category:'accessory',season:'spring',color:'#E74C3C',colorName:'红色',icon:'🧣',status:'frequent'},
-  {id:43,name:'皮带',category:'accessory',season:'all',color:'#8B6914',colorName:'棕色',icon:'🪢',status:'frequent'},
-  {id:44,name:'棒球帽',category:'accessory',season:'summer',color:'#4A90D9',colorName:'蓝色',icon:'🧢',status:'frequent'},
-  {id:45,name:'领带',category:'accessory',season:'all',color:'#E74C3C',colorName:'红色',icon:'🎀',status:'frequent'},
-  {id:46,name:'旧牛仔裤',category:'bottom',season:'all',color:'#4A90D9',colorName:'蓝色',icon:'👖',status:'outdated'},
-  {id:47,name:'褪色T恤',category:'top',season:'summer',color:'#999999',colorName:'灰色',icon:'👕',status:'outdated'},
-  {id:48,name:'不合身西装',category:'outer',season:'autumn',color:'#333333',colorName:'黑色',icon:'🧥',status:'outdated'},
+  // ========== 👗 女装 20件 ==========
+  // --- 休闲松弛风 ---
+  {id:'w01',name:'柔感针织衫',category:'top',season:'spring',color:'#E8D5C4',colorName:'燕麦色',icon:'🧶',status:'frequent',style:'casual',gender:'women',owner:'妈妈',addedDate:'2026-03-15',wearCount:12},
+  {id:'w02',name:'垂感阔腿裤',category:'bottom',season:'summer',color:'#D4C5B0',colorName:'卡其色',icon:'👖',status:'frequent',style:'casual',gender:'women',owner:'妈妈',addedDate:'2026-03-15',wearCount:8},
+  // --- 商务智感风 ---
+  {id:'w03',name:'真丝垂感衬衫',category:'top',season:'all',color:'#7BA7BC',colorName:'变革蓝绿',icon:'👔',status:'frequent',style:'business',gender:'women',owner:'妈妈',addedDate:'2026-02-20',wearCount:15},
+  {id:'w04',name:'高腰烟管裤',category:'bottom',season:'all',color:'#4A4A4A',colorName:'深灰色',icon:'👖',status:'frequent',style:'business',gender:'women',owner:'妈妈',addedDate:'2026-02-20',wearCount:10},
+  // --- 运动活力风 ---
+  {id:'w05',name:'复古运动针织衫',category:'top',season:'spring',color:'#F5F0EB',colorName:'米白色',icon:'👕',status:'frequent',style:'sport',gender:'women',owner:'妈妈',addedDate:'2026-04-01',wearCount:6},
+  {id:'w06',name:'工装风直筒裤',category:'bottom',season:'autumn',color:'#6B7B5E',colorName:'军绿色',icon:'👖',status:'frequent',style:'sport',gender:'women',owner:'妈妈',addedDate:'2026-04-01',wearCount:5},
+  // --- 复古经典风 ---
+  {id:'w07',name:'Preppy条纹针织衫',category:'top',season:'autumn',color:'#C4A77D',colorName:'奶茶金',icon:'🧶',status:'frequent',style:'retro',gender:'women',owner:'妈妈',addedDate:'2026-01-10',wearCount:9},
+  {id:'w08',name:'复古伞裙',category:'bottom',season:'spring',color:'#C9A9A6',colorName:'尘玫瑰',icon:'👗',status:'frequent',style:'retro',gender:'women',owner:'妈妈',addedDate:'2026-01-10',wearCount:7},
+  // --- 法式优雅风 ---
+  {id:'w09',name:'法式荡领衬衫',category:'top',season:'summer',color:'#F5F0EB',colorName:'云上舞白',icon:'👔',status:'frequent',style:'french',gender:'women',owner:'妈妈',addedDate:'2026-03-05',wearCount:11},
+  {id:'w10',name:'针织半身裙',category:'bottom',season:'autumn',color:'#D4B896',colorName:'焦糖色',icon:'👗',status:'frequent',style:'french',gender:'women',owner:'妈妈',addedDate:'2026-03-05',wearCount:8},
+  // --- 日系简约风 ---
+  {id:'w11',name:'薰衣草针织衫',category:'top',season:'spring',color:'#B8A9C9',colorName:'薰衣草紫',icon:'🧶',status:'frequent',style:'japanese',gender:'women',owner:'妈妈',addedDate:'2026-04-10',wearCount:10},
+  {id:'w12',name:'高腰直筒裤',category:'bottom',season:'all',color:'#E8E0D5',colorName:'米灰色',icon:'👖',status:'frequent',style:'japanese',gender:'women',owner:'妈妈',addedDate:'2026-04-10',wearCount:14},
+  // --- 韩系时尚风 ---
+  {id:'w13',name:'Oversized西装外套',category:'outer',season:'autumn',color:'#5A524C',colorName:'深棕色',icon:'🧥',status:'frequent',style:'korean',gender:'women',owner:'妈妈',addedDate:'2026-02-15',wearCount:13},
+  {id:'w14',name:'同色系阔腿西裤',category:'bottom',season:'all',color:'#5A524C',colorName:'深棕色',icon:'👖',status:'frequent',style:'korean',gender:'women',owner:'妈妈',addedDate:'2026-02-15',wearCount:11},
+  // --- 街头潮流风 ---
+  {id:'w15',name:'Oversized卫衣',category:'top',season:'autumn',color:'#333333',colorName:'黑色',icon:'👕',status:'frequent',style:'street',gender:'women',owner:'妈妈',addedDate:'2026-01-20',wearCount:16},
+  {id:'w16',name:'垂感阔腿牛仔裤',category:'bottom',season:'all',color:'#6B8DB5',colorName:'水洗蓝',icon:'👖',status:'frequent',style:'street',gender:'women',owner:'妈妈',addedDate:'2026-01-20',wearCount:12},
+  // --- 柔美浪漫风 ---
+  {id:'w17',name:'泡泡袖方领上衣',category:'top',season:'summer',color:'#F0D6D0',colorName:'樱花粉',icon:'👚',status:'frequent',style:'romantic',gender:'women',owner:'妈妈',addedDate:'2026-04-05',wearCount:6},
+  {id:'w18',name:'碎花连衣裙',category:'bottom',season:'summer',color:'#C9D4C5',colorName:'薄荷绿',icon:'👗',status:'frequent',style:'romantic',gender:'women',owner:'妈妈',addedDate:'2026-04-05',wearCount:5},
+  // --- 度假自然风 ---
+  {id:'w19',name:'静谧蓝防晒衬衫',category:'top',season:'summer',color:'#A3C4D9',colorName:'静谧蓝',icon:'👔',status:'frequent',style:'resort',gender:'women',owner:'妈妈',addedDate:'2026-05-01',wearCount:3},
+  {id:'w20',name:'白色短裤',category:'bottom',season:'summer',color:'#FFFFFF',colorName:'白色',icon:'🩳',status:'frequent',style:'resort',gender:'women',owner:'妈妈',addedDate:'2026-05-01',wearCount:4},
+
+  // ========== 👔 男装 20件 ==========
+  // --- 休闲松弛风 ---
+  {id:'m01',name:'重磅卫衣',category:'top',season:'autumn',color:'#8B8178',colorName:'灰棕色',icon:'👕',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-03-10',wearCount:18},
+  {id:'m02',name:'直筒牛仔裤',category:'bottom',season:'all',color:'#4A6B8A',colorName:'靛蓝色',icon:'👖',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-03-10',wearCount:20},
+  // --- 商务智感风 ---
+  {id:'m03',name:'精裁白衬衫',category:'top',season:'all',color:'#FFFFFF',colorName:'白色',icon:'👔',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-02-01',wearCount:22},
+  {id:'m04',name:'大廓形西装',category:'outer',season:'autumn',color:'#3A3A3A',colorName:'炭灰色',icon:'🧥',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-02-01',wearCount:14},
+  // --- 复古运动风 ---
+  {id:'m05',name:'复古球衣',category:'top',season:'spring',color:'#C4A77D',colorName:'复古金',icon:'👕',status:'frequent',style:'sport',gender:'men',owner:'爸爸',addedDate:'2026-04-15',wearCount:7},
+  {id:'m06',name:'运动长裤',category:'bottom',season:'all',color:'#333333',colorName:'黑色',icon:'👖',status:'frequent',style:'sport',gender:'men',owner:'爸爸',addedDate:'2026-04-15',wearCount:10},
+  // --- 复古工装风 ---
+  {id:'m07',name:'灯芯绒夹克',category:'outer',season:'autumn',color:'#6B5B3E',colorName:'深咖色',icon:'🧥',status:'frequent',style:'workwear',gender:'men',owner:'爸爸',addedDate:'2026-01-25',wearCount:9},
+  {id:'m08',name:'直筒工装裤',category:'bottom',season:'autumn',color:'#6B7B5E',colorName:'军绿色',icon:'👖',status:'frequent',style:'workwear',gender:'men',owner:'爸爸',addedDate:'2026-01-25',wearCount:8},
+  // --- 牛仔单宁风 ---
+  {id:'m09',name:'牛仔夹克',category:'outer',season:'spring',color:'#5B7FA5',colorName:'牛仔蓝',icon:'🧥',status:'frequent',style:'denim',gender:'men',owner:'爸爸',addedDate:'2026-03-20',wearCount:11},
+  {id:'m10',name:'牛仔喇叭裤',category:'bottom',season:'autumn',color:'#6B8DB5',colorName:'水洗蓝',icon:'👖',status:'frequent',style:'denim',gender:'men',owner:'爸爸',addedDate:'2026-03-20',wearCount:6},
+  // --- 古典正装风 ---
+  {id:'m11',name:'双排扣西装',category:'outer',season:'all',color:'#2C2C2C',colorName:'藏青色',icon:'🧥',status:'frequent',style:'classic',gender:'men',owner:'爸爸',addedDate:'2026-01-05',wearCount:8},
+  {id:'m12',name:'修身西裤',category:'bottom',season:'all',color:'#2C2C2C',colorName:'藏青色',icon:'👖',status:'frequent',style:'classic',gender:'men',owner:'爸爸',addedDate:'2026-01-05',wearCount:9},
+  // --- 学院风 ---
+  {id:'m13',name:'条纹针织衫',category:'top',season:'autumn',color:'#C4A77D',colorName:'奶茶金',icon:'🧶',status:'frequent',style:'preppy',gender:'men',owner:'爸爸',addedDate:'2026-02-28',wearCount:10},
+  {id:'m14',name:'卡其裤',category:'bottom',season:'all',color:'#D4C5B0',colorName:'卡其色',icon:'👖',status:'frequent',style:'preppy',gender:'men',owner:'爸爸',addedDate:'2026-02-28',wearCount:15},
+  // --- 日系简约风 ---
+  {id:'m15',name:'纯色基础T恤',category:'top',season:'summer',color:'#FFFFFF',colorName:'白色',icon:'👕',status:'frequent',style:'japanese',gender:'men',owner:'爸爸',addedDate:'2026-05-01',wearCount:25},
+  {id:'m16',name:'宽松休闲长裤',category:'bottom',season:'all',color:'#8B8178',colorName:'灰棕色',icon:'👖',status:'frequent',style:'japanese',gender:'men',owner:'爸爸',addedDate:'2026-05-01',wearCount:18},
+  // --- 街头潮流风 ---
+  {id:'m17',name:'宽松落肩T恤',category:'top',season:'summer',color:'#333333',colorName:'黑色',icon:'👕',status:'frequent',style:'street',gender:'men',owner:'爸爸',addedDate:'2026-04-20',wearCount:14},
+  {id:'m18',name:'短款力量夹克',category:'outer',season:'spring',color:'#333333',colorName:'黑色',icon:'🧥',status:'frequent',style:'street',gender:'men',owner:'爸爸',addedDate:'2026-04-20',wearCount:7},
+  // --- 鞋履 & 配饰 ---
+  {id:'m19',name:'复古运动鞋',category:'shoes',season:'all',color:'#F5F0EB',colorName:'米白色',icon:'👟',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-03-10',wearCount:30},
+  {id:'m20',name:'马丁靴',category:'shoes',season:'autumn',color:'#3A3A3A',colorName:'深灰色',icon:'🥾',status:'frequent',style:'workwear',gender:'men',owner:'爸爸',addedDate:'2026-01-25',wearCount:12},
+  // --- 女装鞋履 & 配饰补充 ---
+  {id:'w21',name:'裸色尖头高跟鞋',category:'shoes',season:'all',color:'#E8D5C4',colorName:'裸色',icon:'👠',status:'frequent',style:'business',gender:'women',owner:'妈妈',addedDate:'2026-02-20',wearCount:10},
+  {id:'w22',name:'草编坡跟鞋',category:'shoes',season:'summer',color:'#D4C5B0',colorName:'草编色',icon:'👠',status:'frequent',style:'resort',gender:'women',owner:'妈妈',addedDate:'2026-05-01',wearCount:3},
+  {id:'w23',name:'珍珠耳环',category:'accessory',season:'all',color:'#F5F0EB',colorName:'米白色',icon:'💎',status:'frequent',style:'french',gender:'women',owner:'妈妈',addedDate:'2026-03-05',wearCount:20},
+  {id:'w24',name:'丝巾',category:'accessory',season:'spring',color:'#C4A77D',colorName:'奶茶金',icon:'🧣',status:'frequent',style:'french',gender:'women',owner:'妈妈',addedDate:'2026-03-05',wearCount:15},
+  {id:'w25',name:'帆布包',category:'accessory',season:'all',color:'#F5F0EB',colorName:'米白色',icon:'👜',status:'frequent',style:'casual',gender:'women',owner:'妈妈',addedDate:'2026-03-15',wearCount:22},
+  {id:'w26',name:'棒球帽',category:'accessory',season:'summer',color:'#FFFFFF',colorName:'白色',icon:'🧢',status:'frequent',style:'street',gender:'women',owner:'妈妈',addedDate:'2026-01-20',wearCount:16},
+  {id:'w27',name:'贝雷帽',category:'accessory',season:'autumn',color:'#C4A77D',colorName:'奶茶金',icon:'🧢',status:'frequent',style:'japanese',gender:'women',owner:'妈妈',addedDate:'2026-04-10',wearCount:8},
+  {id:'w28',name:'草编帽',category:'accessory',season:'summer',color:'#D4C5B0',colorName:'草编色',icon:'👒',status:'frequent',style:'resort',gender:'women',owner:'妈妈',addedDate:'2026-05-01',wearCount:4},
+  // --- 男装鞋履 & 配饰补充 ---
+  {id:'m21',name:'乐福鞋',category:'shoes',season:'all',color:'#6B5B3E',colorName:'深咖色',icon:'👞',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-02-01',wearCount:16},
+  {id:'m22',name:'牛津鞋',category:'shoes',season:'all',color:'#2C2C2C',colorName:'藏青色',icon:'👞',status:'frequent',style:'classic',gender:'men',owner:'爸爸',addedDate:'2026-01-05',wearCount:7},
+  {id:'m23',name:'皮质皮带',category:'accessory',season:'all',color:'#6B5B3E',colorName:'深咖色',icon:'🪢',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-02-01',wearCount:25},
+  {id:'m24',name:'棒球帽',category:'accessory',season:'summer',color:'#333333',colorName:'黑色',icon:'🧢',status:'frequent',style:'street',gender:'men',owner:'爸爸',addedDate:'2026-04-20',wearCount:12},
+  {id:'m25',name:'帆布包',category:'accessory',season:'all',color:'#F5F0EB',colorName:'米白色',icon:'🎒',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-03-10',wearCount:14},
+  {id:'m26',name:'简约手表',category:'accessory',season:'all',color:'#C0C0C0',colorName:'银色',icon:'⌚',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-02-01',wearCount:30},
+  {id:'m27',name:'冷帽',category:'accessory',season:'winter',color:'#4A4A4A',colorName:'深灰色',icon:'🧢',status:'frequent',style:'workwear',gender:'men',owner:'爸爸',addedDate:'2026-01-25',wearCount:9},
+  {id:'m28',name:'切尔西靴',category:'shoes',season:'autumn',color:'#3A3A3A',colorName:'深灰色',icon:'🥾',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-03-10',wearCount:11},
+  // --- 闲置/过时衣物（用于提醒功能） ---
+  {id:'w29',name:'褪色碎花裙',category:'bottom',season:'summer',color:'#C9D4C5',colorName:'薄荷绿',icon:'👗',status:'outdated',style:'romantic',gender:'women',owner:'妈妈',addedDate:'2024-06-01',wearCount:35},
+  {id:'m29',name:'旧运动鞋',category:'shoes',season:'all',color:'#FFFFFF',colorName:'白色',icon:'👟',status:'outdated',style:'sport',gender:'men',owner:'爸爸',addedDate:'2024-03-15',wearCount:80},
 ];
 
 const defaultAlerts = [
-  {id:1,clothId:48,name:'不合身西装',icon:'🧥',status:'orange',statusText:'不合身',suggestion:'建议捐赠或改裁，当前尺码已不合适'},
-  {id:2,clothId:47,name:'褪色T恤',icon:'👕',status:'red',statusText:'过时',suggestion:'已穿着超过2年，面料老化，建议淘汰'},
-  {id:3,clothId:46,name:'旧牛仔裤',icon:'👖',status:'yellow',statusText:'需清洗',suggestion:'超过30天未穿着，建议清洗后收纳'},
+  {id:1,clothId:'w29',name:'褪色碎花裙',icon:'👗',status:'red',statusText:'过时',suggestion:'已穿着超过2年，面料老化，建议淘汰或改造'},
+  {id:2,clothId:'m29',name:'旧运动鞋',icon:'👟',status:'orange',statusText:'磨损',suggestion:'鞋底磨损严重，建议更换新鞋'},
 ];
 
 // 数据存取函数
@@ -1195,12 +1251,14 @@ function setData(key, val) {
 }
 
 function initDefaultData() {
-  if (!localStorage.getItem(CLOTHING_KEY)) {
-    setData(CLOTHING_KEY, defaultClothes);
+  const DATA_VERSION = 'v2';
+  if (localStorage.getItem(CLOTHING_KEY) && localStorage.getItem('wardrobe_version') === DATA_VERSION) {
+    return; // 已有最新数据
   }
-  if (!localStorage.getItem(ALERTS_KEY)) {
-    setData(ALERTS_KEY, defaultAlerts);
-  }
+  // 清除旧数据，写入新数据
+  setData(CLOTHING_KEY, defaultClothes);
+  setData(ALERTS_KEY, defaultAlerts);
+  localStorage.setItem('wardrobe_version', DATA_VERSION);
 }
 
 // ===== Router =====
@@ -1292,6 +1350,8 @@ function closeFullscreen(e) {
 
 // ===== Wardrobe Page =====
 let currentFilter = 'all';
+let currentGender = 'all';
+let currentStyle = 'all';
 
 // 类别和季节映射
 const categoryMap = {top:'上装',bottom:'下装',outer:'外套',shoes:'鞋履',accessory:'配饰'};
@@ -1300,7 +1360,17 @@ const categoryIcons = {top:'👔',bottom:'👖',outer:'🧥',shoes:'👟',access
 
 function renderWardrobe() {
   const clothes = getData(CLOTHING_KEY, defaultClothes);
-  const filtered = currentFilter === 'all' ? clothes : clothes.filter(c => c.category === currentFilter);
+  // 多维度筛选：性别 + 类别 + 风格
+  let filtered = clothes;
+  if (currentGender !== 'all') {
+    filtered = filtered.filter(c => c.gender === currentGender);
+  }
+  if (currentFilter !== 'all') {
+    filtered = filtered.filter(c => c.category === currentFilter);
+  }
+  if (currentStyle !== 'all') {
+    filtered = filtered.filter(c => c.style === currentStyle);
+  }
   const grid = document.getElementById('clothing-grid');
   const countEl = document.getElementById('wardrobe-count');
 
@@ -1310,6 +1380,8 @@ function renderWardrobe() {
   grid.innerHTML = filtered.map(c => {
     const hasImage = c.image && c.image.length > 0;
     const isOutdated = c.status === 'outdated';
+    const styleLabel = c.style ? (styleMap[c.style] || '') : '';
+    const genderLabel = c.gender ? (genderMap[c.gender] || '') : '';
     return `
       <div class="clothing-card fade-in" onclick="viewClothingDetail('${c.id}')">
         ${isOutdated ? '<div class="c-status-tag">过时</div>' : ''}
@@ -1318,11 +1390,46 @@ function renderWardrobe() {
           : `<div class="c-icon">${c.icon || categoryIcons[c.category] || '👕'}</div>`
         }
         <div class="c-name">${c.name}</div>
-        <div class="c-season">${seasonMap[c.season] || c.season}</div>
+        <div class="c-season">${styleLabel || seasonMap[c.season] || c.season}</div>
       </div>
     `;
   }).join('');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--text-muted);font-size:13px;font-weight:200">
+        <div style="font-size:40px;margin-bottom:12px">🔍</div>
+        没有找到匹配的衣物
+      </div>
+    `;
+  }
 }
+
+// 动态生成风格筛选标签
+function renderStyleTabs() {
+  const clothes = getData(CLOTHING_KEY, defaultClothes);
+  let pool = clothes;
+  if (currentGender !== 'all') {
+    pool = pool.filter(c => c.gender === currentGender);
+  }
+  // 获取当前衣物池中的所有风格
+  const styles = [...new Set(pool.map(c => c.style).filter(Boolean))];
+  const styleTabsEl = document.getElementById('style-tabs');
+  styleTabsEl.innerHTML = '<button class="filter-tab active" data-style="all">全部风格</button>' +
+    styles.map(s => `<button class="filter-tab" data-style="${s}">${styleMap[s] || s}</button>`).join('');
+  currentStyle = 'all';
+}
+
+// 性别筛选
+document.getElementById('gender-tabs').addEventListener('click', function(e) {
+  const tab = e.target.closest('.filter-tab');
+  if (!tab) return;
+  this.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  currentGender = tab.dataset.gender;
+  renderStyleTabs();
+  renderWardrobe();
+});
 
 // Filter tabs
 document.getElementById('filter-tabs').addEventListener('click', function(e) {
@@ -1331,6 +1438,16 @@ document.getElementById('filter-tabs').addEventListener('click', function(e) {
   this.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
   tab.classList.add('active');
   currentFilter = tab.dataset.filter;
+  renderWardrobe();
+});
+
+// 风格筛选
+document.getElementById('style-tabs').addEventListener('click', function(e) {
+  const tab = e.target.closest('.filter-tab');
+  if (!tab) return;
+  this.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  currentStyle = tab.dataset.style;
   renderWardrobe();
 });
 
@@ -1370,6 +1487,19 @@ function viewClothingDetail(id) {
   document.getElementById('detail-color-preview').style.background = item.color || '#ccc';
   document.getElementById('detail-status').textContent = item.status === 'outdated' ? '过时/不合身' : '常穿';
   document.getElementById('detail-date').textContent = item.addedDate || '未知';
+  
+  // 显示风格和性别信息
+  const detailExtra = document.getElementById('detail-extra-info');
+  const detailExtraRow = document.getElementById('detail-extra-row');
+  if (item.style || item.gender) {
+    const parts = [];
+    if (item.gender) parts.push(genderMap[item.gender] || item.gender);
+    if (item.style) parts.push(styleMap[item.style] || item.style);
+    detailExtra.textContent = parts.join(' · ');
+    detailExtraRow.style.display = 'flex';
+  } else {
+    detailExtraRow.style.display = 'none';
+  }
 
   navigateTo('clothing-detail');
 }
