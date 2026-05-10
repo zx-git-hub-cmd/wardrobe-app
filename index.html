@@ -2620,11 +2620,17 @@ function saveClothing() {
     const clothes = getData(CLOTHING_KEY, defaultClothes);
     const idx = clothes.findIndex(c => String(c.id) === String(window.editingClothingId));
     if (idx !== -1) {
+      // 获取归属成员并推断性别
+      const owner = getCurrentOwner();
+      const gender = owner === '爸爸' || owner === '儿子' ? 'men' : 'women';
+      
       clothes[idx].name = name;
       clothes[idx].category = category;
       clothes[idx].season = season;
       clothes[idx].color = selectedColor;
       clothes[idx].colorName = selectedColorName;
+      clothes[idx].owner = owner;
+      clothes[idx].gender = gender;
       if (selectedImageBase64) clothes[idx].image = selectedImageBase64;
       setData(CLOTHING_KEY, clothes);
       showToast('修改成功');
@@ -2657,6 +2663,10 @@ function saveClothing() {
   // 获取现有衣物数据
   const clothes = getData(CLOTHING_KEY, defaultClothes);
   
+  // 获取归属成员并推断性别
+  const owner = getCurrentOwner();
+  const gender = owner === '爸爸' || owner === '儿子' ? 'men' : 'women';
+  
   // 创建新衣物对象
   const newItem = {
     id: generateId(),
@@ -2669,7 +2679,8 @@ function saveClothing() {
     image: selectedImageBase64,
     addedDate: getCurrentDate(),
     wearCount: 0,
-    owner: getCurrentOwner()
+    owner: owner,
+    gender: gender
   };
 
   // 保存到localStorage
