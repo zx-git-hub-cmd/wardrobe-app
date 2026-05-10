@@ -726,6 +726,119 @@ body{
   display:flex;align-items:center;justify-content:center;
 }
 
+/* ===== Scene Outfits Page ===== */
+.scene-tabs{
+  display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;
+}
+.scene-tab{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:20px;font-size:12px;font-weight:300;
+  border:1px solid var(--border-subtle);background:transparent;
+  color:var(--text-muted);cursor:pointer;white-space:nowrap;transition:all 0.2s;
+  flex-shrink:0;
+}
+.scene-tab.active{background:var(--gold);color:#FFFFFF;border-color:var(--gold)}
+.scene-tab:active{transform:scale(0.95)}
+.scene-tab .scene-icon{font-size:14px}
+
+.scene-outfit-card{
+  margin-bottom:16px;
+}
+.scene-outfit-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;
+}
+.scene-outfit-header .soh-icon{font-size:24px}
+.scene-outfit-header .soh-info{flex:1}
+.scene-outfit-header .soh-name{font-size:15px;font-weight:300;color:var(--text)}
+.scene-outfit-header .soh-desc{font-size:11px;font-weight:200;color:var(--text-muted);margin-top:2px}
+.scene-outfit-header .soh-score{
+  font-size:11px;color:var(--gold);background:rgba(196,167,125,0.1);
+  padding:4px 10px;border-radius:12px;white-space:nowrap;
+}
+
+.scene-mannequin{
+  display:flex;align-items:center;justify-content:center;
+  height:300px;position:relative;
+  background:linear-gradient(180deg,rgba(196,167,125,0.05) 0%,rgba(196,167,125,0.12) 100%);
+  border-radius:16px;overflow:hidden;margin-bottom:12px;
+  cursor:pointer;
+}
+.scene-mannequin .scene-model-bg{
+  position:absolute;width:160px;height:280px;object-fit:contain;opacity:0.9;z-index:0;
+}
+.scene-mannequin .scene-items-overlay{
+  position:relative;width:160px;height:280px;
+  display:flex;flex-direction:column;align-items:center;
+  z-index:1;
+}
+.scene-mannequin .scene-slot{
+  position:absolute;display:flex;align-items:center;justify-content:center;
+  border-radius:10px;overflow:hidden;
+  box-shadow:0 2px 12px rgba(90,82,76,0.1);
+  transition:all 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.scene-mannequin .scene-slot img{
+  width:100%;height:100%;object-fit:cover;
+}
+.scene-mannequin .scene-slot.top-slot{
+  top:35px;left:50%;transform:translateX(-50%);
+  width:85px;height:75px;border-radius:10px;
+}
+.scene-mannequin .scene-slot.bottom-slot{
+  top:115px;left:50%;transform:translateX(-50%);
+  width:75px;height:80px;border-radius:10px;
+}
+.scene-mannequin .scene-slot.outer-slot{
+  top:22px;left:50%;transform:translateX(-50%);
+  width:95px;height:90px;border-radius:10px;z-index:2;
+}
+.scene-mannequin .scene-slot.shoes-slot{
+  bottom:12px;left:50%;transform:translateX(-50%);
+  width:55px;height:38px;border-radius:8px;
+}
+.scene-mannequin .scene-slot.acc-slot{
+  top:12px;right:2px;
+  width:34px;height:34px;border-radius:50%;
+}
+.scene-mannequin .scene-slot.focus-highlight{
+  border:2px solid var(--gold);
+  box-shadow:0 0 12px rgba(196,167,125,0.3);
+}
+
+.scene-items-list{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+  padding:14px;background:var(--bg-card);border-radius:var(--radius);
+  border:1px solid var(--border-subtle);
+}
+.scene-item-card{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:10px 6px;background:var(--bg);border-radius:var(--radius-sm);
+  position:relative;
+}
+.scene-item-card.focus-item{
+  border:1.5px solid var(--gold);
+  background:rgba(196,167,125,0.06);
+}
+.scene-item-card .sic-icon{
+  width:56px;height:56px;border-radius:var(--radius-sm);
+  background:var(--bg-card);border:1px solid var(--border-subtle);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;overflow:hidden;
+}
+.scene-item-card .sic-icon img{
+  width:100%;height:100%;object-fit:cover;
+}
+.scene-item-card .sic-name{font-size:10px;font-weight:300;color:var(--text-secondary);text-align:center;line-height:1.3}
+.scene-item-card .sic-tag{
+  position:absolute;top:4px;right:4px;
+  font-size:8px;color:var(--gold);background:rgba(196,167,125,0.15);
+  padding:1px 5px;border-radius:6px;
+}
+
+.scene-adopt-btn{
+  margin-top:12px;
+}
+
 /* ===== Animations ===== */
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .fade-in{animation:fadeIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards}
@@ -1065,6 +1178,28 @@ body{
     </div>
   </div>
 
+  <!-- ===== PAGE: SCENE OUTFITS ===== -->
+  <div class="page" id="page-scene-outfits">
+    <div class="page-header">
+      <button class="back-btn" onclick="goBack()">‹</button>
+      <div class="en-label">SCENE OUTFITS</div>
+      <h1>多场景搭配</h1>
+      <div class="sub" id="scene-focus-name">为新衣物生成搭配方案</div>
+    </div>
+    
+    <!-- 焦点衣物展示 -->
+    <div id="scene-focus-card" class="glass-card" style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding:16px">
+    </div>
+    
+    <!-- 场景标签横向滚动 -->
+    <div class="scene-tabs" id="scene-tabs" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px">
+    </div>
+    
+    <!-- 场景搭配内容 -->
+    <div id="scene-outfit-content">
+    </div>
+  </div>
+
   <!-- ===== PAGE: CLOTHING DETAIL ===== -->
   <div class="page" id="page-clothing-detail">
     <div class="page-header">
@@ -1113,6 +1248,7 @@ body{
     </div>
 
     <div class="detail-actions">
+      <button class="btn-outline" onclick="openSceneOutfits(currentClothingId)" style="border-color:var(--gold);color:var(--gold)">👗 查看搭配</button>
       <button class="btn-outline" onclick="editClothing()">✎ 编辑</button>
       <button class="btn-outline btn-delete" onclick="deleteClothing()">✕ 删除</button>
     </div>
@@ -1585,6 +1721,7 @@ function navigateTo(page) {
     if (page === 'settings') loadSettings();
     if (page === 'style-pref') renderStylePreferences();
     if (page === 'wear-report') renderWearReport();
+    if (page === 'scene-outfits') { /* already rendered by openSceneOutfits */ }
     // 离开衣橱页面时退出批量模式
     if (page !== 'wardrobe' && isBatchMode) {
       isBatchMode = false;
@@ -2688,10 +2825,10 @@ function saveClothing() {
   setData(CLOTHING_KEY, clothes);
 
   // 显示成功提示
-  showToast('保存成功');
+  showToast('保存成功，正在生成搭配方案...');
 
-  // 跳转到衣橱页面
-  setTimeout(() => navigateTo('wardrobe'), 600);
+  // 跳转到多场景搭配页面
+  setTimeout(() => openSceneOutfits(newItem.id), 800);
 }
 
 // 重置添加表单
@@ -2976,6 +3113,30 @@ const outfitTemplates = {
   ]
 };
 
+// 多场景搭配体系
+const sceneDefinitions = {
+  women: [
+    { id: 'commute', name: '都市通勤', icon: '🏢', desc: '干练得体的职场穿搭', styles: ['commute','minimal','elegant'], parts: ['top','bottom','shoes','accessory'], requireOuter: false },
+    { id: 'business', name: '商务会议', icon: '💼', desc: '正式专业的会议着装', styles: ['elegant','commute'], parts: ['top','bottom','shoes','accessory'], requireOuter: true },
+    { id: 'casual', name: '周末休闲', icon: '☕', desc: '舒适随性的日常穿搭', styles: ['casual','korean','cozy'], parts: ['top','bottom','shoes'], requireOuter: false },
+    { id: 'date', name: '浪漫约会', icon: '🌹', desc: '温柔浪漫的约会搭配', styles: ['romantic','korean','elegant'], parts: ['top','bottom','shoes','accessory'], requireOuter: false },
+    { id: 'outdoor', name: '户外出行', icon: '🏔️', desc: '实用舒适的外出穿搭', styles: ['sporty','vacation','casual'], parts: ['top','bottom','shoes','accessory'], requireOuter: false },
+    { id: 'party', name: '聚会派对', icon: '🥂', desc: '时尚吸睛的派对造型', styles: ['street','elegant','vintage'], parts: ['top','bottom','shoes','accessory'], requireOuter: false },
+    { id: 'vacation', name: '度假旅行', icon: '✈️', desc: '轻松愉快的度假穿搭', styles: ['vacation','romantic','casual'], parts: ['top','bottom','shoes','accessory'], requireOuter: false },
+    { id: 'sport', name: '运动健身', icon: '🏃', desc: '活力十足的运动搭配', styles: ['sporty','casual'], parts: ['top','bottom','shoes'], requireOuter: false },
+  ],
+  men: [
+    { id: 'commute', name: '都市通勤', icon: '🏢', desc: '干练得体的职场穿搭', styles: ['business','casual','japanese'], parts: ['top','bottom','shoes','accessory'], requireOuter: false },
+    { id: 'business', name: '商务会议', icon: '💼', desc: '正式专业的会议着装', styles: ['business','gentleman'], parts: ['top','bottom','shoes','accessory'], requireOuter: true },
+    { id: 'casual', name: '周末休闲', icon: '☕', desc: '舒适随性的日常穿搭', styles: ['casual','japanese','preppy'], parts: ['top','bottom','shoes'], requireOuter: false },
+    { id: 'date', name: '浪漫约会', icon: '🌹', desc: '绅士有型的约会搭配', styles: ['gentleman','japanese','casual'], parts: ['top','bottom','shoes','accessory'], requireOuter: false },
+    { id: 'outdoor', name: '户外出行', icon: '🏔️', desc: '实用舒适的外出穿搭', styles: ['outdoor','athletic','workwear'], parts: ['top','bottom','shoes'], requireOuter: false },
+    { id: 'party', name: '聚会派对', icon: '🥂', desc: '时尚有型的聚会造型', styles: ['urban','street','gentleman'], parts: ['top','bottom','shoes','accessory'], requireOuter: false },
+    { id: 'vacation', name: '度假旅行', icon: '✈️', desc: '轻松愉快的度假穿搭', styles: ['summer','casual','athletic'], parts: ['top','bottom','shoes'], requireOuter: false },
+    { id: 'sport', name: '运动健身', icon: '🏃', desc: '活力十足的运动搭配', styles: ['athletic','casual'], parts: ['top','bottom','shoes'], requireOuter: false },
+  ]
+};
+
 // 生成一套穿搭
 function generateOneOutfit(clothes, gender, season, excludeIds) {
   const genderClothes = clothes.filter(c => c.gender === gender && c.status !== 'outdated');
@@ -3079,6 +3240,133 @@ function generateRecommendations(count) {
   // 按和谐度评分排序
   outfits.sort((a, b) => b.harmonyScore - a.harmonyScore);
   return outfits;
+}
+
+// 根据指定衣物生成多场景搭配
+function generateSceneOutfits(focusItem) {
+  const clothes = getData(CLOTHING_KEY, defaultClothes);
+  const gender = focusItem.gender || 'women';
+  const season = focusItem.season || currentWeather.season || getCurrentSeason();
+  const scenes = sceneDefinitions[gender] || sceneDefinitions.women;
+  
+  const results = [];
+  
+  for (const scene of scenes) {
+    const outfit = generateSceneOutfit(clothes, gender, season, focusItem, scene);
+    if (outfit) {
+      results.push(outfit);
+    }
+  }
+  
+  return results;
+}
+
+// 为单个场景生成搭配
+function generateSceneOutfit(clothes, gender, season, focusItem, scene) {
+  const genderClothes = clothes.filter(c => c.gender === gender && c.status !== 'outdated');
+  const seasonClothes = filterBySeason(genderClothes, season);
+  
+  // 按类别分组
+  const byCategory = {};
+  seasonClothes.forEach(c => {
+    if (!byCategory[c.category]) byCategory[c.category] = [];
+    byCategory[c.category].push(c);
+  });
+  
+  const selected = [];
+  const usedIds = new Set();
+  const recentWornIds = getRecentWornItemIds(3);
+  
+  // 确定焦点衣物的位置
+  const focusCategory = focusItem.category;
+  
+  // 根据场景的parts列表选择衣物
+  for (const part of scene.parts) {
+    let pool;
+    
+    if (part === focusCategory && !usedIds.has(String(focusItem.id))) {
+      // 焦点衣物优先放在对应位置
+      selected.push(focusItem);
+      usedIds.add(String(focusItem.id));
+      continue;
+    }
+    
+    pool = (byCategory[part] || []).filter(c => !usedIds.has(String(c.id)));
+    
+    if (pool.length === 0) {
+      // 如果没有该类别的衣物，尝试用其他类别替代
+      if (part === 'accessory') continue; // 配饰可以跳过
+      if (part === 'outer' && !scene.requireOuter) continue; // 非必须外套可跳过
+      continue;
+    }
+    
+    // 评分选择：颜色和谐度 + 风格匹配 + 新鲜度 + 偏好
+    const scorePool = pool.map(item => {
+      let score = 0;
+      
+      // 颜色和谐度
+      if (selected.length > 0) {
+        score += calcHarmonyScore([...selected, item]) * 0.4;
+      }
+      
+      // 场景风格匹配加分
+      if (scene.styles.includes(item.style)) {
+        score += 0.3;
+      }
+      
+      // 新鲜度
+      if (!recentWornIds.has(item.id)) {
+        score += 0.2;
+      }
+      
+      // 用户偏好
+      score += getPreferenceBoost(item);
+      
+      return { item, score };
+    });
+    
+    scorePool.sort((a, b) => b.score - a.score);
+    const topN = Math.min(3, scorePool.length);
+    const pick = scorePool[Math.floor(Math.random() * topN)].item;
+    selected.push(pick);
+    usedIds.add(String(pick.id));
+  }
+  
+  // 如果焦点衣物还没被加入（比如焦点是配饰但场景不需要配饰），强制加入
+  if (!usedIds.has(String(focusItem.id))) {
+    // 找一个合适的位置插入
+    const focusSlot = scene.parts.find(p => p === focusCategory) || scene.parts[0];
+    if (focusSlot) {
+      selected.unshift(focusItem);
+      usedIds.add(String(focusItem.id));
+    }
+  }
+  
+  if (selected.length < 2) return null;
+  
+  const harmonyScore = calcHarmonyScore(selected);
+  
+  // 确定主导风格
+  const styleCount = {};
+  selected.forEach(c => {
+    if (c.style) styleCount[c.style] = (styleCount[c.style] || 0) + 1;
+  });
+  const mainStyle = Object.entries(styleCount).sort((a,b) => b[1] - a[1])[0];
+  
+  return {
+    id: 'scene_' + scene.id + '_' + Date.now() + '_' + Math.random().toString(36).substr(2,4),
+    items: selected,
+    template: scene.name,
+    sceneId: scene.id,
+    sceneName: scene.name,
+    sceneIcon: scene.icon,
+    sceneDesc: scene.desc,
+    style: mainStyle ? mainStyle[0] : 'casual',
+    styleName: mainStyle ? (styleMap[mainStyle[0]] || '混搭') : '混搭',
+    harmonyScore: harmonyScore,
+    gender: gender,
+    focusItemId: String(focusItem.id)
+  };
 }
 
 // 渲染首页推荐穿搭
@@ -3234,6 +3522,182 @@ function selectFamilyMember(el) {
   const gender = el.dataset.gender || 'women';
   document.getElementById('home-title').textContent = name + '的今日穿搭';
   renderHomeRecommendations();
+}
+
+// ===== Scene Outfits (多场景搭配) =====
+let currentSceneOutfits = [];
+let currentSceneIndex = 0;
+let sceneFocusItem = null;
+
+// 打开多场景搭配页面
+function openSceneOutfits(clothingId) {
+  const clothes = getData(CLOTHING_KEY, defaultClothes);
+  const item = clothes.find(c => String(c.id) === String(clothingId));
+  if (!item) { showToast('未找到该衣物'); return; }
+  
+  sceneFocusItem = item;
+  
+  // 渲染焦点衣物卡片
+  const focusCard = document.getElementById('scene-focus-card');
+  const hasImage = item.image && item.image.length > 0;
+  focusCard.innerHTML = `
+    <div style="width:60px;height:60px;border-radius:12px;overflow:hidden;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border-subtle)">
+      ${hasImage 
+        ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover">`
+        : `<span style="font-size:28px">${item.icon || categoryIcons[item.category] || '👕'}</span>`
+      }
+    </div>
+    <div style="flex:1">
+      <div style="font-size:14px;color:var(--text);font-weight:300">${item.name}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${categoryMap[item.category] || item.category} · ${item.colorName || ''} · ${genderMap[item.gender] || ''}</div>
+    </div>
+    <div style="font-size:10px;color:var(--gold);background:rgba(196,167,125,0.1);padding:4px 10px;border-radius:12px;white-space:nowrap">焦点单品</div>
+  `;
+  
+  document.getElementById('scene-focus-name').textContent = '为「' + item.name + '」生成搭配方案';
+  
+  // 生成多场景搭配
+  currentSceneOutfits = generateSceneOutfits(item);
+  currentSceneIndex = 0;
+  
+  // 渲染场景标签
+  renderSceneTabs();
+  // 渲染当前场景搭配
+  renderSceneOutfit();
+  
+  navigateTo('scene-outfits');
+}
+
+// 渲染场景标签
+function renderSceneTabs() {
+  const tabsEl = document.getElementById('scene-tabs');
+  tabsEl.innerHTML = currentSceneOutfits.map((outfit, idx) => `
+    <button class="scene-tab ${idx === currentSceneIndex ? 'active' : ''}" onclick="switchScene(${idx})">
+      <span class="scene-icon">${outfit.sceneIcon || '👗'}</span>
+      ${outfit.sceneName || '搭配'}
+    </button>
+  `).join('');
+}
+
+// 切换场景
+function switchScene(idx) {
+  currentSceneIndex = idx;
+  renderSceneTabs();
+  renderSceneOutfit();
+}
+
+// 渲染当前场景搭配
+function renderSceneOutfit() {
+  const contentEl = document.getElementById('scene-outfit-content');
+  
+  if (currentSceneOutfits.length === 0) {
+    contentEl.innerHTML = `
+      <div style="text-align:center;padding:60px 0;color:var(--text-muted);font-size:13px">
+        <div style="font-size:40px;margin-bottom:12px">🔍</div>
+        衣橱中衣物不足，无法生成搭配方案<br>
+        <span style="font-size:11px">建议至少添加3件不同类别的衣物</span>
+      </div>
+    `;
+    return;
+  }
+  
+  const outfit = currentSceneOutfits[currentSceneIndex];
+  if (!outfit) return;
+  
+  // 选择模特模板图
+  const modelTemplateMap = {
+    'minimal': 'images/model_w_minimal.jpg', 'commute': 'images/model_w_commute.jpg',
+    'romantic': 'images/model_w_romantic.jpg', 'sporty': 'images/model_w_sporty.jpg',
+    'vintage': 'images/model_w_vintage.jpg', 'korean': 'images/model_w_korean.jpg',
+    'elegant': 'images/model_w_elegant.jpg', 'street': 'images/model_w_street.jpg',
+    'vacation': 'images/model_w_vacation.jpg', 'cozy': 'images/model_w_cozy.jpg',
+    'business': 'images/model_m_business.jpg', 'casual': 'images/model_m_casual.jpg',
+    'athletic': 'images/model_m_athletic.jpg', 'workwear': 'images/model_m_workwear.jpg',
+    'japanese': 'images/model_m_japanese.jpg', 'urban': 'images/model_m_urban.jpg',
+    'gentleman': 'images/model_m_gentleman.jpg', 'outdoor': 'images/model_m_outdoor.jpg',
+    'preppy': 'images/model_m_preppy.jpg', 'summer': 'images/model_m_summer.jpg',
+  };
+  const modelImage = modelTemplateMap[outfit.style] || (outfit.gender === 'men' ? 'images/model_m_casual.jpg' : 'images/model_w_minimal.jpg');
+  
+  // 构建模特叠加的衣物slot
+  const slotHtml = outfit.items.map(item => {
+    const thumbSrc = item.thumb || item.image;
+    const hasImage = thumbSrc && thumbSrc.length > 0;
+    const isFocus = String(item.id) === String(sceneFocusItem.id);
+    
+    let slotClass = '';
+    if (item.category === 'top') slotClass = 'top-slot';
+    else if (item.category === 'bottom') slotClass = 'bottom-slot';
+    else if (item.category === 'outer') slotClass = 'outer-slot';
+    else if (item.category === 'shoes') slotClass = 'shoes-slot';
+    else if (item.category === 'accessory') slotClass = 'acc-slot';
+    
+    if (!slotClass) return '';
+    
+    const imgHtml = hasImage
+      ? `<img src="${thumbSrc}" alt="${item.name}">`
+      : `<span style="font-size:20px">${item.icon || categoryIcons[item.category] || '👕'}</span>`;
+    
+    return `<div class="scene-slot ${slotClass} ${isFocus ? 'focus-highlight' : ''}">${imgHtml}</div>`;
+  }).join('');
+  
+  // 构建单品列表
+  const itemsListHtml = outfit.items.map(item => {
+    const thumbSrc = item.thumb || item.image;
+    const hasImage = thumbSrc && thumbSrc.length > 0;
+    const isFocus = String(item.id) === String(sceneFocusItem.id);
+    
+    const imgHtml = hasImage
+      ? `<img src="${thumbSrc}" alt="${item.name}">`
+      : `<span>${item.icon || categoryIcons[item.category] || '👕'}</span>`;
+    
+    return `
+      <div class="scene-item-card ${isFocus ? 'focus-item' : ''}">
+        ${isFocus ? '<div class="sic-tag">新</div>' : ''}
+        <div class="sic-icon">${imgHtml}</div>
+        <div class="sic-name">${item.name}</div>
+      </div>
+    `;
+  }).join('');
+  
+  contentEl.innerHTML = `
+    <div class="glass-card scene-outfit-card">
+      <div class="scene-outfit-header">
+        <span class="soh-icon">${outfit.sceneIcon || '👗'}</span>
+        <div class="soh-info">
+          <div class="soh-name">${outfit.sceneName || '搭配方案'}</div>
+          <div class="soh-desc">${outfit.sceneDesc || ''} · ${outfit.items.length}件单品</div>
+        </div>
+        <div class="soh-score">${Math.round(outfit.harmonyScore * 100)}分</div>
+      </div>
+      
+      <div class="scene-mannequin" onclick="openFullscreen(this.querySelector('.scene-model-bg'))">
+        <img src="${modelImage}" class="scene-model-bg" alt="模特">
+        <div class="scene-items-overlay">
+          ${slotHtml}
+        </div>
+      </div>
+      
+      <div class="scene-items-list">
+        ${itemsListHtml}
+      </div>
+      
+      <div class="scene-adopt-btn">
+        <button class="btn-gold" onclick="confirmSceneOutfit()">✓ 采纳此搭配</button>
+      </div>
+    </div>
+  `;
+}
+
+// 采纳场景搭配
+function confirmSceneOutfit() {
+  if (currentSceneOutfits.length === 0) return;
+  const outfit = currentSceneOutfits[currentSceneIndex];
+  if (!outfit) return;
+  
+  saveOutfitToHistory(outfit);
+  updateUserPreferences(outfit);
+  showToast('「' + outfit.sceneName + '」搭配已采纳！');
 }
 
 // ===== Alerts Page =====
