@@ -1,10 +1,10 @@
-const CACHE_NAME = 'wardrobe-app-v11';
+const CACHE_NAME = 'wardrobe-app-v15';
 const ASSETS = [
   '/index.html',
   '/manifest.json'
 ];
 
-// 图片文件列表
+// 图片文件列表（全新40件衣物）
 const IMAGE_FILES = [
   '/images/w01.jpg','/images/w02.jpg','/images/w03.jpg','/images/w04.jpg','/images/w05.jpg',
   '/images/w06.jpg','/images/w07.jpg','/images/w08.jpg','/images/w09.jpg','/images/w10.jpg',
@@ -16,36 +16,25 @@ const IMAGE_FILES = [
   '/images/m16.jpg','/images/m17.jpg','/images/m18.jpg','/images/m19.jpg','/images/m20.jpg',
 ];
 
-// 缩略图文件列表（优先缓存，用于快速加载）
-const THUMB_FILES = [
-  '/images/thumbs/w01.jpg','/images/thumbs/w02.jpg','/images/thumbs/w03.jpg','/images/thumbs/w04.jpg','/images/thumbs/w05.jpg',
-  '/images/thumbs/w06.jpg','/images/thumbs/w07.jpg','/images/thumbs/w08.jpg','/images/thumbs/w09.jpg','/images/thumbs/w10.jpg',
-  '/images/thumbs/w11.jpg','/images/thumbs/w12.jpg','/images/thumbs/w13.jpg','/images/thumbs/w14.jpg','/images/thumbs/w15.jpg',
-  '/images/thumbs/w16.jpg','/images/thumbs/w17.jpg','/images/thumbs/w18.jpg','/images/thumbs/w19.jpg','/images/thumbs/w20.jpg',
-  '/images/thumbs/m01.jpg','/images/thumbs/m02.jpg','/images/thumbs/m03.jpg','/images/thumbs/m04.jpg','/images/thumbs/m05.jpg',
-  '/images/thumbs/m06.jpg','/images/thumbs/m07.jpg','/images/thumbs/m08.jpg','/images/thumbs/m09.jpg','/images/thumbs/m10.jpg',
-  '/images/thumbs/m11.jpg','/images/thumbs/m12.jpg','/images/thumbs/m13.jpg','/images/thumbs/m14.jpg','/images/thumbs/m15.jpg',
-  '/images/thumbs/m16.jpg','/images/thumbs/m17.jpg','/images/thumbs/m18.jpg','/images/thumbs/m19.jpg','/images/thumbs/m20.jpg',
-];
-
-// 模特模板图（风格化穿搭展示）
+// 模特模板图（20张：女装10 + 男装10）
 const MODEL_FILES = [
-  // 女装
-  '/images/model_w_casual.jpg','/images/model_w_business.jpg','/images/model_w_sport.jpg',
-  '/images/model_w_retro.jpg','/images/model_w_french.jpg','/images/model_w_japanese.jpg',
-  '/images/model_w_korean.jpg','/images/model_w_street.jpg','/images/model_w_romantic.jpg',
-  '/images/model_w_resort.jpg',
-  // 男装
-  '/images/model_m_casual.jpg','/images/model_m_business.jpg','/images/model_m_sport.jpg',
-  '/images/model_m_workwear.jpg','/images/model_m_denim.jpg','/images/model_m_classic.jpg',
-  '/images/model_m_preppy.jpg','/images/model_m_japanese.jpg','/images/model_m_street.jpg',
+  // 女装10种风格
+  '/images/model_w_minimal.jpg','/images/model_w_commute.jpg','/images/model_w_romantic.jpg',
+  '/images/model_w_sporty.jpg','/images/model_w_vintage.jpg','/images/model_w_korean.jpg',
+  '/images/model_w_elegant.jpg','/images/model_w_street.jpg','/images/model_w_vacation.jpg',
+  '/images/model_w_cozy.jpg',
+  // 男装10种风格
+  '/images/model_m_business.jpg','/images/model_m_casual.jpg','/images/model_m_athletic.jpg',
+  '/images/model_m_workwear.jpg','/images/model_m_japanese.jpg','/images/model_m_urban.jpg',
+  '/images/model_m_gentleman.jpg','/images/model_m_outdoor.jpg','/images/model_m_preppy.jpg',
+  '/images/model_m_summer.jpg',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // 优先缓存缩略图和模特模板，确保快速首屏
-      return cache.addAll([...ASSETS, ...THUMB_FILES, ...MODEL_FILES]).then(() => {
+      // 优先缓存模特模板，确保快速首屏
+      return cache.addAll([...ASSETS, ...MODEL_FILES]).then(() => {
         return cache.addAll(IMAGE_FILES);
       }).catch(() => {});
     })

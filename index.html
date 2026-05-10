@@ -162,21 +162,23 @@ body{
 
 .outfit-recommend{margin:20px 0}
 .outfit-items{
-  display:flex;align-items:center;justify-content:center;gap:16px;
-  margin:20px 0;padding:20px 0;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  margin:16px 0;padding:16px;background:var(--bg-card);
+  border-radius:var(--radius);border:1px solid var(--border-subtle);
 }
 .outfit-item{
-  display:flex;flex-direction:column;align-items:center;gap:8px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:10px 6px;background:var(--bg);border-radius:var(--radius-sm);
 }
 .outfit-item .icon{
-  width:72px;height:72px;border-radius:var(--radius);
+  width:64px;height:64px;border-radius:var(--radius-sm);
   background:var(--bg-card);border:1px solid var(--border-subtle);
   display:flex;align-items:center;justify-content:center;
-  font-size:32px;transition:all 0.3s;
-  box-shadow:0 2px 12px rgba(90,82,76,0.04);
+  font-size:28px;transition:all 0.3s;
+  box-shadow:0 2px 8px rgba(90,82,76,0.04);
 }
-.outfit-item.center .icon{width:88px;height:88px;font-size:40px;border-color:var(--border)}
-.outfit-item .label{font-size:11px;font-weight:300;color:var(--text-secondary)}
+.outfit-item.center .icon{width:80px;height:80px;font-size:36px;border-color:var(--border)}
+.outfit-item .label{font-size:11px;font-weight:300;color:var(--text-secondary);text-align:center;line-height:1.3}
 .outfit-title{font-size:18px;font-weight:300;color:var(--text);margin-top:8px}
 .outfit-subtitle{font-size:12px;font-weight:300;color:var(--text-muted);margin-top:4px}
 .outfit-btn{margin-top:20px}
@@ -831,7 +833,7 @@ body{
         </div>
         <span class="fm-name">儿子</span>
       </div>
-      <div class="family-member" onclick="showToast('功能开发中，敬请期待')">
+      <div class="family-member" onclick="addFamilyMember()">
         <div class="fm-add">+</div>
         <span class="fm-name" style="color:#B8A99A">添加成员</span>
       </div>
@@ -1092,6 +1094,147 @@ body{
     </div>
   </div>
 
+  <!-- ===== PAGE: DATA BACKUP ===== -->
+  <div class="page" id="page-data-backup">
+    <div class="page-header">
+      <button class="back-btn" onclick="goBack()">‹</button>
+      <div class="en-label">DATA BACKUP</div>
+      <h1>数据备份</h1>
+      <div class="sub">管理您的衣橱数据</div>
+    </div>
+    <div class="glass-card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-size:28px">☁️</span>
+        <div>
+          <div style="font-size:14px;color:var(--text)">导出数据</div>
+          <div style="font-size:11px;color:var(--text-muted)">将所有衣物和穿搭记录导出为文件</div>
+        </div>
+      </div>
+      <button class="btn-gold" onclick="exportData()">导出到文件</button>
+    </div>
+    <div class="glass-card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-size:28px">📥</span>
+        <div>
+          <div style="font-size:14px;color:var(--text)">导入数据</div>
+          <div style="font-size:11px;color:var(--text-muted)">从备份文件恢复衣橱数据</div>
+        </div>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn-outline" style="width:100%;height:50px;border-radius:12px;font-size:13px" onclick="document.getElementById('import-file').click()">选择备份文件导入</button>
+    </div>
+    <div class="glass-card" style="border-color:#E74C3C">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-size:28px">🗑️</span>
+        <div>
+          <div style="font-size:14px;color:#E74C3C">清除所有数据</div>
+          <div style="font-size:11px;color:var(--text-muted)">删除所有衣物、历史和偏好数据</div>
+        </div>
+      </div>
+      <button class="btn-outline" style="width:100%;height:50px;border-radius:12px;font-size:13px;color:#E74C3C;border-color:#E74C3C" onclick="clearAllData()">清除数据</button>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: SETTINGS ===== -->
+  <div class="page" id="page-settings">
+    <div class="page-header">
+      <button class="back-btn" onclick="goBack()">‹</button>
+      <div class="en-label">SETTINGS</div>
+      <h1>设置</h1>
+    </div>
+    <div class="glass-card" style="margin-bottom:16px">
+      <div class="form-label" style="margin-bottom:12px">推荐设置</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <span style="font-size:13px;color:var(--text)">自动刷新推荐</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px">
+          <input type="checkbox" id="setting-auto-refresh" checked style="opacity:0;width:0;height:0" onchange="saveSetting('autoRefresh',this.checked)">
+          <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:12px;transition:0.3s"></span>
+        </label>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <span style="font-size:13px;color:var(--text)">考虑天气因素</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px">
+          <input type="checkbox" id="setting-weather" checked style="opacity:0;width:0;height:0" onchange="saveSetting('useWeather',this.checked)">
+          <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:12px;transition:0.3s"></span>
+        </label>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--text)">偏好学习</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px">
+          <input type="checkbox" id="setting-pref-learn" checked style="opacity:0;width:0;height:0" onchange="saveSetting('prefLearning',this.checked)">
+          <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:12px;transition:0.3s"></span>
+        </label>
+      </div>
+    </div>
+    <div class="glass-card" style="margin-bottom:16px">
+      <div class="form-label" style="margin-bottom:12px">显示设置</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <span style="font-size:13px;color:var(--text)">默认城市</span>
+        <span style="font-size:12px;color:var(--gold)" id="setting-city-display">--</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--text)">数据版本</span>
+        <span style="font-size:12px;color:var(--text-muted)">v8</span>
+      </div>
+    </div>
+    <div class="glass-card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--text-secondary)">清除缓存</span>
+        <button class="btn-outline" onclick="clearCache()">清除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: ABOUT ===== -->
+  <div class="page" id="page-about">
+    <div class="page-header">
+      <button class="back-btn" onclick="goBack()">‹</button>
+      <div class="en-label">ABOUT</div>
+      <h1>关于</h1>
+    </div>
+    <div style="text-align:center;padding:30px 0">
+      <div style="font-size:48px;margin-bottom:12px">👔</div>
+      <div style="font-size:20px;font-weight:200;color:var(--text);letter-spacing:1px">衣橱管家</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">AI 智能穿搭助手</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px">版本 2.0.0</div>
+    </div>
+    <div class="glass-card" style="margin-bottom:16px">
+      <div class="form-label" style="margin-bottom:12px">功能特色</div>
+      <div style="font-size:13px;color:var(--text);line-height:2">
+        <div>🎨 AI 智能穿搭推荐</div>
+        <div>🌤️ 实时天气适配</div>
+        <div>📊 穿搭数据分析</div>
+        <div>👨‍👩‍👧‍👦 家庭成员管理</div>
+        <div>🧠 偏好智能学习</div>
+        <div>☁️ 数据云端备份</div>
+      </div>
+    </div>
+    <div class="glass-card" style="margin-bottom:16px">
+      <div class="form-label" style="margin-bottom:12px">技术信息</div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:2">
+        <div>前端框架：原生 HTML/CSS/JS</div>
+        <div>AI 引擎：本地色彩和谐算法</div>
+        <div>天气服务：Open-Meteo API</div>
+        <div>数据存储：LocalStorage</div>
+        <div>离线支持：Service Worker + PWA</div>
+      </div>
+    </div>
+    <div style="text-align:center;padding:20px 0;font-size:11px;color:var(--text-muted)">
+      Made with ❤️ by AI Stylist Team
+    </div>
+  </div>
+
+  <!-- ===== PAGE: OUTFIT HISTORY ===== -->
+  <div class="page" id="page-outfit-history">
+    <div class="page-header">
+      <button class="back-btn" onclick="goBack()">‹</button>
+      <div class="en-label">OUTFIT HISTORY</div>
+      <h1>穿搭历史</h1>
+      <div class="sub" id="history-count">0条记录</div>
+    </div>
+    <div id="history-list" style="padding-bottom:20px"></div>
+  </div>
+
   <!-- ===== PAGE: ALERTS ===== -->
   <div class="page" id="page-alerts">
     <div class="page-header">
@@ -1110,73 +1253,69 @@ body{
     </div>
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-num" id="stat-total">48</div>
+        <div class="stat-num" id="stat-total">0</div>
         <div class="stat-label">总单品</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="stat-outfits">12</div>
+        <div class="stat-num" id="stat-outfits">0</div>
         <div class="stat-label">搭配方案</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="stat-wear">86%</div>
+        <div class="stat-num" id="stat-wear">0%</div>
         <div class="stat-label">穿着率</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num" id="stat-alerts">3</div>
+        <div class="stat-num" id="stat-alerts">0</div>
         <div class="stat-label">待处理</div>
       </div>
     </div>
     <div class="stat-section">
       <h3>类别分布</h3>
-      <div class="stat-bar-row">
-        <span class="stat-bar-label">上装</span>
-        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:65%"></div></div>
-        <span class="stat-bar-val">18</span>
-      </div>
-      <div class="stat-bar-row">
-        <span class="stat-bar-label">下装</span>
-        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:45%"></div></div>
-        <span class="stat-bar-val">12</span>
-      </div>
-      <div class="stat-bar-row">
-        <span class="stat-bar-label">外套</span>
-        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:35%"></div></div>
-        <span class="stat-bar-val">8</span>
-      </div>
-      <div class="stat-bar-row">
-        <span class="stat-bar-label">鞋履</span>
-        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:30%"></div></div>
-        <span class="stat-bar-val">7</span>
-      </div>
-      <div class="stat-bar-row">
-        <span class="stat-bar-label">配饰</span>
-        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:10%"></div></div>
-        <span class="stat-bar-val">3</span>
-      </div>
+      <div id="stat-category-bars"></div>
     </div>
     <div class="stat-section">
       <h3>季节分布</h3>
-      <div class="stat-bar-row">
-        <span class="stat-bar-label">春季</span>
-        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:55%"></div></div>
-        <span class="stat-bar-val">15</span>
-      </div>
-      <div class="stat-bar-row">
-        <span class="stat-bar-label">夏季</span>
-        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:40%"></div></div>
-        <span class="stat-bar-val">10</span>
-      </div>
-      <div class="stat-bar-row">
-        <span class="stat-bar-label">秋季</span>
-        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:50%"></div></div>
-        <span class="stat-bar-val">13</span>
-      </div>
-      <div class="stat-bar-row">
-        <span class="stat-bar-label">冬季</span>
-        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:38%"></div></div>
-        <span class="stat-bar-val">10</span>
+      <div id="stat-season-bars"></div>
+    </div>
+    <div class="stat-section">
+      <h3>风格分布</h3>
+      <div id="stat-style-bars"></div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: STYLE PREFERENCE ===== -->
+  <div class="page" id="page-style-pref">
+    <div class="page-header">
+      <button class="back-btn" onclick="goBack()">‹</button>
+      <div class="en-label">STYLE PREFERENCE</div>
+      <h1>风格偏好</h1>
+      <div class="sub">AI 会根据您的偏好优化推荐</div>
+    </div>
+    <div class="glass-card" style="margin-bottom:16px">
+      <div class="form-label" style="margin-bottom:12px">偏好风格（点击调整权重）</div>
+      <div id="style-pref-list"></div>
+    </div>
+    <div class="glass-card" style="margin-bottom:16px">
+      <div class="form-label" style="margin-bottom:12px">偏好颜色</div>
+      <div id="color-pref-list"></div>
+    </div>
+    <div class="glass-card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--text-secondary)">重置所有偏好</span>
+        <button class="btn-outline" onclick="resetPreferences()">重置</button>
       </div>
     </div>
+  </div>
+
+  <!-- ===== PAGE: WEAR REPORT ===== -->
+  <div class="page" id="page-wear-report">
+    <div class="page-header">
+      <button class="back-btn" onclick="goBack()">‹</button>
+      <div class="en-label">WEAR REPORT</div>
+      <h1>穿着报告</h1>
+      <div class="sub">近7天穿着分析</div>
+    </div>
+    <div id="wear-report-content"></div>
   </div>
 
   <!-- ===== PAGE: PROFILE ===== -->
@@ -1189,7 +1328,7 @@ body{
       <div class="profile-avatar">👤</div>
       <div class="profile-info">
         <div class="profile-name">时尚达人</div>
-        <div class="profile-sub">已使用衣橱管家 128 天</div>
+        <div class="profile-sub" id="profile-days">已使用衣橱管家 0 天</div>
       </div>
     </div>
     <div class="menu-list">
@@ -1197,23 +1336,27 @@ body{
         <div class="mi-left"><span class="mi-icon">🔔</span><span class="mi-text">待处理提醒</span></div>
         <span class="mi-arrow">›</span>
       </div>
-      <div class="menu-item">
+      <div class="menu-item" onclick="navigateTo('outfit-history')">
+        <div class="mi-left"><span class="mi-icon">📋</span><span class="mi-text">穿搭历史</span></div>
+        <span class="mi-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="navigateTo('style-pref')">
         <div class="mi-left"><span class="mi-icon">🎨</span><span class="mi-text">风格偏好</span></div>
         <span class="mi-arrow">›</span>
       </div>
-      <div class="menu-item">
+      <div class="menu-item" onclick="navigateTo('wear-report')">
         <div class="mi-left"><span class="mi-icon">📊</span><span class="mi-text">穿着报告</span></div>
         <span class="mi-arrow">›</span>
       </div>
-      <div class="menu-item">
+      <div class="menu-item" onclick="navigateTo('data-backup')">
         <div class="mi-left"><span class="mi-icon">☁️</span><span class="mi-text">数据备份</span></div>
         <span class="mi-arrow">›</span>
       </div>
-      <div class="menu-item">
+      <div class="menu-item" onclick="navigateTo('settings')">
         <div class="mi-left"><span class="mi-icon">⚙️</span><span class="mi-text">设置</span></div>
         <span class="mi-arrow">›</span>
       </div>
-      <div class="menu-item">
+      <div class="menu-item" onclick="navigateTo('about')">
         <div class="mi-left"><span class="mi-icon">ℹ️</span><span class="mi-text">关于</span></div>
         <span class="mi-arrow">›</span>
       </div>
@@ -1258,92 +1401,71 @@ const styleMap = {
 };
 const genderMap = {women:'女装',men:'男装',unisex:'中性'};
 
-// 默认衣物数据 — 女装20件 + 男装20件
+// 默认衣物数据 — 全新女装20件 + 男装20件
 const defaultClothes = [
   // ========== 👗 女装 20件 ==========
-  // --- 休闲松弛风 ---
-  {id:'w01',name:'柔感针织衫',category:'top',season:'spring',color:'#E8D5C4',colorName:'燕麦色',icon:'🧶',status:'frequent',style:'casual',gender:'women',owner:'妈妈',addedDate:'2026-03-15',wearCount:12},
-  {id:'w02',name:'垂感阔腿裤',category:'bottom',season:'summer',color:'#D4C5B0',colorName:'卡其色',icon:'👖',status:'frequent',style:'casual',gender:'women',owner:'妈妈',addedDate:'2026-03-15',wearCount:8},
-  // --- 商务智感风 ---
-  {id:'w03',name:'真丝垂感衬衫',category:'top',season:'all',color:'#7BA7BC',colorName:'变革蓝绿',icon:'👔',status:'frequent',style:'business',gender:'women',owner:'妈妈',addedDate:'2026-02-20',wearCount:15},
-  {id:'w04',name:'高腰烟管裤',category:'bottom',season:'all',color:'#4A4A4A',colorName:'深灰色',icon:'👖',status:'frequent',style:'business',gender:'women',owner:'妈妈',addedDate:'2026-02-20',wearCount:10},
-  // --- 运动活力风 ---
-  {id:'w05',name:'复古运动针织衫',category:'top',season:'spring',color:'#F5F0EB',colorName:'米白色',icon:'👕',status:'frequent',style:'sport',gender:'women',owner:'妈妈',addedDate:'2026-04-01',wearCount:6},
-  {id:'w06',name:'工装风直筒裤',category:'bottom',season:'autumn',color:'#6B7B5E',colorName:'军绿色',icon:'👖',status:'frequent',style:'sport',gender:'women',owner:'妈妈',addedDate:'2026-04-01',wearCount:5},
-  // --- 复古经典风 ---
-  {id:'w07',name:'Preppy条纹针织衫',category:'top',season:'autumn',color:'#C4A77D',colorName:'奶茶金',icon:'🧶',status:'frequent',style:'retro',gender:'women',owner:'妈妈',addedDate:'2026-01-10',wearCount:9},
-  {id:'w08',name:'复古伞裙',category:'bottom',season:'spring',color:'#C9A9A6',colorName:'尘玫瑰',icon:'👗',status:'frequent',style:'retro',gender:'women',owner:'妈妈',addedDate:'2026-01-10',wearCount:7},
-  // --- 法式优雅风 ---
-  {id:'w09',name:'法式荡领衬衫',category:'top',season:'summer',color:'#F5F0EB',colorName:'云上舞白',icon:'👔',status:'frequent',style:'french',gender:'women',owner:'妈妈',addedDate:'2026-03-05',wearCount:11},
-  {id:'w10',name:'针织半身裙',category:'bottom',season:'autumn',color:'#D4B896',colorName:'焦糖色',icon:'👗',status:'frequent',style:'french',gender:'women',owner:'妈妈',addedDate:'2026-03-05',wearCount:8},
-  // --- 日系简约风 ---
-  {id:'w11',name:'薰衣草针织衫',category:'top',season:'spring',color:'#B8A9C9',colorName:'薰衣草紫',icon:'🧶',status:'frequent',style:'japanese',gender:'women',owner:'妈妈',addedDate:'2026-04-10',wearCount:10},
-  {id:'w12',name:'高腰直筒裤',category:'bottom',season:'all',color:'#E8E0D5',colorName:'米灰色',icon:'👖',status:'frequent',style:'japanese',gender:'women',owner:'妈妈',addedDate:'2026-04-10',wearCount:14},
-  // --- 韩系时尚风 ---
-  {id:'w13',name:'Oversized西装外套',category:'outer',season:'autumn',color:'#5A524C',colorName:'深棕色',icon:'🧥',status:'frequent',style:'korean',gender:'women',owner:'妈妈',addedDate:'2026-02-15',wearCount:13},
-  {id:'w14',name:'同色系阔腿西裤',category:'bottom',season:'all',color:'#5A524C',colorName:'深棕色',icon:'👖',status:'frequent',style:'korean',gender:'women',owner:'妈妈',addedDate:'2026-02-15',wearCount:11},
-  // --- 街头潮流风 ---
-  {id:'w15',name:'Oversized卫衣',category:'top',season:'autumn',color:'#333333',colorName:'黑色',icon:'👕',status:'frequent',style:'street',gender:'women',owner:'妈妈',addedDate:'2026-01-20',wearCount:16},
-  {id:'w16',name:'垂感阔腿牛仔裤',category:'bottom',season:'all',color:'#6B8DB5',colorName:'水洗蓝',icon:'👖',status:'frequent',style:'street',gender:'women',owner:'妈妈',addedDate:'2026-01-20',wearCount:12},
-  // --- 柔美浪漫风 ---
-  {id:'w17',name:'泡泡袖方领上衣',category:'top',season:'summer',color:'#F0D6D0',colorName:'樱花粉',icon:'👚',status:'frequent',style:'romantic',gender:'women',owner:'妈妈',addedDate:'2026-04-05',wearCount:6},
-  {id:'w18',name:'碎花连衣裙',category:'bottom',season:'summer',color:'#C9D4C5',colorName:'薄荷绿',icon:'👗',status:'frequent',style:'romantic',gender:'women',owner:'妈妈',addedDate:'2026-04-05',wearCount:5},
-  // --- 度假自然风 ---
-  {id:'w19',name:'静谧蓝防晒衬衫',category:'top',season:'summer',color:'#A3C4D9',colorName:'静谧蓝',icon:'👔',status:'frequent',style:'resort',gender:'women',owner:'妈妈',addedDate:'2026-05-01',wearCount:3},
-  {id:'w20',name:'白色短裤',category:'bottom',season:'summer',color:'#FFFFFF',colorName:'白色',icon:'🩳',status:'frequent',style:'resort',gender:'women',owner:'妈妈',addedDate:'2026-05-01',wearCount:4},
+  // --- 极简主义 ---
+  {id:'w01',name:'奶油白羊毛大衣',category:'outer',season:'winter',color:'#F5F0EB',colorName:'奶油白',icon:'🧥',status:'frequent',style:'minimal',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:5},
+  {id:'w02',name:'黑色高腰阔腿裤',category:'bottom',season:'all',color:'#2C2C2C',colorName:'墨黑',icon:'👖',status:'frequent',style:'minimal',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:8},
+  // --- 都市通勤 ---
+  {id:'w03',name:'驼色羊绒西装',category:'outer',season:'autumn',color:'#C4A77D',colorName:'驼色',icon:'🧥',status:'frequent',style:'commute',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:12},
+  {id:'w04',name:'白色丝质衬衫',category:'top',season:'all',color:'#FFFFFF',colorName:'纯白',icon:'👔',status:'frequent',style:'commute',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:15},
+  // --- 法式浪漫 ---
+  {id:'w05',name:'红色碎花连衣裙',category:'bottom',season:'summer',color:'#C9A9A6',colorName:'玫瑰粉',icon:'👗',status:'frequent',style:'romantic',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:6},
+  {id:'w06',name:'米色草编包',category:'accessory',season:'summer',color:'#D4C5B0',colorName:'草编色',icon:'👜',status:'frequent',style:'romantic',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:4},
+  // --- 运动休闲 ---
+  {id:'w07',name:'灰色运动卫衣',category:'top',season:'autumn',color:'#8B8178',colorName:'灰褐',icon:'👕',status:'frequent',style:'sporty',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:10},
+  {id:'w08',name:'黑色瑜伽裤',category:'bottom',season:'all',color:'#1A1A1A',colorName:'深黑',icon:'👖',status:'frequent',style:'sporty',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:14},
+  // --- 复古文艺 ---
+  {id:'w09',name:'棕色灯芯绒外套',category:'outer',season:'autumn',color:'#6B5B3E',colorName:'焦糖棕',icon:'🧥',status:'frequent',style:'vintage',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:7},
+  {id:'w10',name:'格纹半身裙',category:'bottom',season:'autumn',color:'#8B7355',colorName:'棕格纹',icon:'👗',status:'frequent',style:'vintage',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:5},
+  // --- 韩系甜美 ---
+  {id:'w11',name:'粉色针织开衫',category:'top',season:'spring',color:'#F0D6D0',colorName:'樱花粉',icon:'🧶',status:'frequent',style:'korean',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:9},
+  {id:'w12',name:'白色百褶裙',category:'bottom',season:'spring',color:'#FAFAFA',colorName:'象牙白',icon:'👗',status:'frequent',style:'korean',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:8},
+  // --- 优雅知性 ---
+  {id:'w13',name:'藏青真丝连衣裙',category:'bottom',season:'summer',color:'#2C3E50',colorName:'藏青',icon:'👗',status:'frequent',style:'elegant',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:11},
+  {id:'w14',name:'珍珠项链',category:'accessory',season:'all',color:'#F8F8F8',colorName:'珍珠白',icon:'💎',status:'frequent',style:'elegant',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:20},
+  // --- 街头潮流 ---
+  {id:'w15',name:'黑色皮夹克',category:'outer',season:'autumn',color:'#1A1A1A',colorName:'漆黑',icon:'🧥',status:'frequent',style:'street',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:6},
+  {id:'w16',name:'破洞牛仔裤',category:'bottom',season:'all',color:'#4A6B8A',colorName:'水洗蓝',icon:'👖',status:'frequent',style:'street',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:8},
+  // --- 度假风情 ---
+  {id:'w17',name:'黄色吊带长裙',category:'bottom',season:'summer',color:'#F4D03F',colorName:'明黄',icon:'👗',status:'frequent',style:'vacation',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:3},
+  {id:'w18',name:'草编遮阳帽',category:'accessory',season:'summer',color:'#E8D5C4',colorName:'浅草编',icon:'👒',status:'frequent',style:'vacation',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:4},
+  // --- 温暖秋冬 ---
+  {id:'w19',name:'橙色羊绒围巾',category:'accessory',season:'winter',color:'#E67E22',colorName:'暖橙',icon:'🧣',status:'frequent',style:'cozy',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:12},
+  {id:'w20',name:'棕色短靴',category:'shoes',season:'autumn',color:'#6B5B3E',colorName:'深棕',icon:'👢',status:'frequent',style:'cozy',gender:'women',owner:'妈妈',addedDate:'2026-05-10',wearCount:7},
 
   // ========== 👔 男装 20件 ==========
-  // --- 休闲松弛风 ---
-  {id:'m01',name:'重磅卫衣',category:'top',season:'autumn',color:'#8B8178',colorName:'灰棕色',icon:'👕',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-03-10',wearCount:18},
-  {id:'m02',name:'直筒牛仔裤',category:'bottom',season:'all',color:'#4A6B8A',colorName:'靛蓝色',icon:'👖',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-03-10',wearCount:20},
-  // --- 商务智感风 ---
-  {id:'m03',name:'精裁白衬衫',category:'top',season:'all',color:'#FFFFFF',colorName:'白色',icon:'👔',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-02-01',wearCount:22},
-  {id:'m04',name:'大廓形西装',category:'outer',season:'autumn',color:'#3A3A3A',colorName:'炭灰色',icon:'🧥',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-02-01',wearCount:14},
-  // --- 复古运动风 ---
-  {id:'m05',name:'复古球衣',category:'top',season:'spring',color:'#C4A77D',colorName:'复古金',icon:'👕',status:'frequent',style:'sport',gender:'men',owner:'爸爸',addedDate:'2026-04-15',wearCount:7},
-  {id:'m06',name:'运动长裤',category:'bottom',season:'all',color:'#333333',colorName:'黑色',icon:'👖',status:'frequent',style:'sport',gender:'men',owner:'爸爸',addedDate:'2026-04-15',wearCount:10},
-  // --- 复古工装风 ---
-  {id:'m07',name:'灯芯绒夹克',category:'outer',season:'autumn',color:'#6B5B3E',colorName:'深咖色',icon:'🧥',status:'frequent',style:'workwear',gender:'men',owner:'爸爸',addedDate:'2026-01-25',wearCount:9},
-  {id:'m08',name:'直筒工装裤',category:'bottom',season:'autumn',color:'#6B7B5E',colorName:'军绿色',icon:'👖',status:'frequent',style:'workwear',gender:'men',owner:'爸爸',addedDate:'2026-01-25',wearCount:8},
-  // --- 牛仔单宁风 ---
-  {id:'m09',name:'牛仔夹克',category:'outer',season:'spring',color:'#5B7FA5',colorName:'牛仔蓝',icon:'🧥',status:'frequent',style:'denim',gender:'men',owner:'爸爸',addedDate:'2026-03-20',wearCount:11},
-  {id:'m10',name:'牛仔喇叭裤',category:'bottom',season:'autumn',color:'#6B8DB5',colorName:'水洗蓝',icon:'👖',status:'frequent',style:'denim',gender:'men',owner:'爸爸',addedDate:'2026-03-20',wearCount:6},
-  // --- 古典正装风 ---
-  {id:'m11',name:'双排扣西装',category:'outer',season:'all',color:'#2C2C2C',colorName:'藏青色',icon:'🧥',status:'frequent',style:'classic',gender:'men',owner:'爸爸',addedDate:'2026-01-05',wearCount:8},
-  {id:'m12',name:'修身西裤',category:'bottom',season:'all',color:'#2C2C2C',colorName:'藏青色',icon:'👖',status:'frequent',style:'classic',gender:'men',owner:'爸爸',addedDate:'2026-01-05',wearCount:9},
-  // --- 学院风 ---
-  {id:'m13',name:'条纹针织衫',category:'top',season:'autumn',color:'#C4A77D',colorName:'奶茶金',icon:'🧶',status:'frequent',style:'preppy',gender:'men',owner:'爸爸',addedDate:'2026-02-28',wearCount:10},
-  {id:'m14',name:'卡其裤',category:'bottom',season:'all',color:'#D4C5B0',colorName:'卡其色',icon:'👖',status:'frequent',style:'preppy',gender:'men',owner:'爸爸',addedDate:'2026-02-28',wearCount:15},
-  // --- 日系简约风 ---
-  {id:'m15',name:'纯色基础T恤',category:'top',season:'summer',color:'#FFFFFF',colorName:'白色',icon:'👕',status:'frequent',style:'japanese',gender:'men',owner:'爸爸',addedDate:'2026-05-01',wearCount:25},
-  {id:'m16',name:'宽松休闲长裤',category:'bottom',season:'all',color:'#8B8178',colorName:'灰棕色',icon:'👖',status:'frequent',style:'japanese',gender:'men',owner:'爸爸',addedDate:'2026-05-01',wearCount:18},
-  // --- 街头潮流风 ---
-  {id:'m17',name:'宽松落肩T恤',category:'top',season:'summer',color:'#333333',colorName:'黑色',icon:'👕',status:'frequent',style:'street',gender:'men',owner:'爸爸',addedDate:'2026-04-20',wearCount:14},
-  {id:'m18',name:'短款力量夹克',category:'outer',season:'spring',color:'#333333',colorName:'黑色',icon:'🧥',status:'frequent',style:'street',gender:'men',owner:'爸爸',addedDate:'2026-04-20',wearCount:7},
-  // --- 鞋履 & 配饰 ---
-  {id:'m19',name:'复古运动鞋',category:'shoes',season:'all',color:'#F5F0EB',colorName:'米白色',icon:'👟',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-03-10',wearCount:30},
-  {id:'m20',name:'马丁靴',category:'shoes',season:'autumn',color:'#3A3A3A',colorName:'深灰色',icon:'🥾',status:'frequent',style:'workwear',gender:'men',owner:'爸爸',addedDate:'2026-01-25',wearCount:12},
-  // --- 女装鞋履 & 配饰补充 ---
-  {id:'w21',name:'裸色尖头高跟鞋',category:'shoes',season:'all',color:'#E8D5C4',colorName:'裸色',icon:'👠',status:'frequent',style:'business',gender:'women',owner:'妈妈',addedDate:'2026-02-20',wearCount:10},
-  {id:'w22',name:'草编坡跟鞋',category:'shoes',season:'summer',color:'#D4C5B0',colorName:'草编色',icon:'👠',status:'frequent',style:'resort',gender:'women',owner:'妈妈',addedDate:'2026-05-01',wearCount:3},
-  {id:'w23',name:'珍珠耳环',category:'accessory',season:'all',color:'#F5F0EB',colorName:'米白色',icon:'💎',status:'frequent',style:'french',gender:'women',owner:'妈妈',addedDate:'2026-03-05',wearCount:20},
-  {id:'w24',name:'丝巾',category:'accessory',season:'spring',color:'#C4A77D',colorName:'奶茶金',icon:'🧣',status:'frequent',style:'french',gender:'women',owner:'妈妈',addedDate:'2026-03-05',wearCount:15},
-  {id:'w25',name:'帆布包',category:'accessory',season:'all',color:'#F5F0EB',colorName:'米白色',icon:'👜',status:'frequent',style:'casual',gender:'women',owner:'妈妈',addedDate:'2026-03-15',wearCount:22},
-  {id:'w26',name:'棒球帽',category:'accessory',season:'summer',color:'#FFFFFF',colorName:'白色',icon:'🧢',status:'frequent',style:'street',gender:'women',owner:'妈妈',addedDate:'2026-01-20',wearCount:16},
-  {id:'w27',name:'贝雷帽',category:'accessory',season:'autumn',color:'#C4A77D',colorName:'奶茶金',icon:'🧢',status:'frequent',style:'japanese',gender:'women',owner:'妈妈',addedDate:'2026-04-10',wearCount:8},
-  {id:'w28',name:'草编帽',category:'accessory',season:'summer',color:'#D4C5B0',colorName:'草编色',icon:'👒',status:'frequent',style:'resort',gender:'women',owner:'妈妈',addedDate:'2026-05-01',wearCount:4},
-  // --- 男装鞋履 & 配饰补充 ---
-  {id:'m21',name:'乐福鞋',category:'shoes',season:'all',color:'#6B5B3E',colorName:'深咖色',icon:'👞',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-02-01',wearCount:16},
-  {id:'m22',name:'牛津鞋',category:'shoes',season:'all',color:'#2C2C2C',colorName:'藏青色',icon:'👞',status:'frequent',style:'classic',gender:'men',owner:'爸爸',addedDate:'2026-01-05',wearCount:7},
-  {id:'m23',name:'皮质皮带',category:'accessory',season:'all',color:'#6B5B3E',colorName:'深咖色',icon:'🪢',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-02-01',wearCount:25},
-  {id:'m24',name:'棒球帽',category:'accessory',season:'summer',color:'#333333',colorName:'黑色',icon:'🧢',status:'frequent',style:'street',gender:'men',owner:'爸爸',addedDate:'2026-04-20',wearCount:12},
-  {id:'m25',name:'帆布包',category:'accessory',season:'all',color:'#F5F0EB',colorName:'米白色',icon:'🎒',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-03-10',wearCount:14},
-  {id:'m26',name:'简约手表',category:'accessory',season:'all',color:'#C0C0C0',colorName:'银色',icon:'⌚',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-02-01',wearCount:30},
-  {id:'m27',name:'冷帽',category:'accessory',season:'winter',color:'#4A4A4A',colorName:'深灰色',icon:'🧢',status:'frequent',style:'workwear',gender:'men',owner:'爸爸',addedDate:'2026-01-25',wearCount:9},
-  {id:'m28',name:'切尔西靴',category:'shoes',season:'autumn',color:'#3A3A3A',colorName:'深灰色',icon:'🥾',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-03-10',wearCount:11},
-  // --- 闲置/过时衣物（用于提醒功能） ---
-  {id:'w29',name:'褪色碎花裙',category:'bottom',season:'summer',color:'#C9D4C5',colorName:'薄荷绿',icon:'👗',status:'outdated',style:'romantic',gender:'women',owner:'妈妈',addedDate:'2024-06-01',wearCount:35},
-  {id:'m29',name:'旧运动鞋',category:'shoes',season:'all',color:'#FFFFFF',colorName:'白色',icon:'👟',status:'outdated',style:'sport',gender:'men',owner:'爸爸',addedDate:'2024-03-15',wearCount:80},
+  // --- 商务精英 ---
+  {id:'m01',name:'深蓝西装套装',category:'outer',season:'all',color:'#1E3A5F',colorName:'深海蓝',icon:'🧥',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:15},
+  {id:'m02',name:'白色商务衬衫',category:'top',season:'all',color:'#FFFFFF',colorName:'雪白',icon:'👔',status:'frequent',style:'business',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:18},
+  // --- 休闲舒适 ---
+  {id:'m03',name:'灰色圆领毛衣',category:'top',season:'autumn',color:'#95A5A6',colorName:'雾灰',icon:'🧶',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:12},
+  {id:'m04',name:'卡其色休闲裤',category:'bottom',season:'all',color:'#D4C5B0',colorName:'卡其',icon:'👖',status:'frequent',style:'casual',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:14},
+  // --- 运动活力 ---
+  {id:'m05',name:'黑色运动外套',category:'outer',season:'autumn',color:'#1A1A1A',colorName:'曜石黑',icon:'🧥',status:'frequent',style:'athletic',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:10},
+  {id:'m06',name:'灰色运动短裤',category:'bottom',season:'summer',color:'#7F8C8D',colorName:'岩灰',icon:'🩳',status:'frequent',style:'athletic',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:16},
+  // --- 复古工装 ---
+  {id:'m07',name:'军绿工装夹克',category:'outer',season:'autumn',color:'#5D6D3E',colorName:'军绿',icon:'🧥',status:'frequent',style:'workwear',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:8},
+  {id:'m08',name:'棕色工装靴',category:'shoes',season:'autumn',color:'#6B4423',colorName:'工装棕',icon:'🥾',status:'frequent',style:'workwear',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:6},
+  // --- 日系简约 ---
+  {id:'m09',name:'米色宽松衬衫',category:'top',season:'spring',color:'#E8DCC4',colorName:'米杏',icon:'👔',status:'frequent',style:'japanese',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:11},
+  {id:'m10',name:'黑色阔腿裤',category:'bottom',season:'all',color:'#2C2C2C',colorName:'炭黑',icon:'👖',status:'frequent',style:'japanese',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:9},
+  // --- 街头潮流 ---
+  {id:'m11',name:'印花连帽卫衣',category:'top',season:'autumn',color:'#34495E',colorName:'深灰蓝',icon:'👕',status:'frequent',style:'urban',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:7},
+  {id:'m12',name:'束脚运动裤',category:'bottom',season:'all',color:'#2C3E50',colorName:'暗夜蓝',icon:'👖',status:'frequent',style:'urban',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:10},
+  // --- 绅士优雅 ---
+  {id:'m13',name:'驼色羊毛大衣',category:'outer',season:'winter',color:'#C4A77D',colorName:'驼绒',icon:'🧥',status:'frequent',style:'gentleman',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:8},
+  {id:'m14',name:'棕色皮鞋',category:'shoes',season:'all',color:'#6B4423',colorName:'咖啡棕',icon:'👞',status:'frequent',style:'gentleman',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:12},
+  // --- 户外探索 ---
+  {id:'m15',name:'橙色冲锋衣',category:'outer',season:'autumn',color:'#E67E22',colorName:'活力橙',icon:'🧥',status:'frequent',style:'outdoor',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:5},
+  {id:'m16',name:'深灰登山裤',category:'bottom',season:'autumn',color:'#4A4A4A',colorName:'岩石灰',icon:'👖',status:'frequent',style:'outdoor',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:6},
+  // --- 学院青春 ---
+  {id:'m17',name:'藏青针织背心',category:'top',season:'spring',color:'#2C3E50',colorName:'学院蓝',icon:'🧶',status:'frequent',style:'preppy',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:9},
+  {id:'m18',name:'格纹领带',category:'accessory',season:'all',color:'#8E44AD',colorName:'紫格纹',icon:'👔',status:'frequent',style:'preppy',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:8},
+  // --- 夏日清爽 ---
+  {id:'m19',name:'浅蓝亚麻衬衫',category:'top',season:'summer',color:'#AED6F1',colorName:'天空蓝',icon:'👔',status:'frequent',style:'summer',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:14},
+  {id:'m20',name:'白色休闲短裤',category:'bottom',season:'summer',color:'#F8F9F9',colorName:'云朵白',icon:'🩳',status:'frequent',style:'summer',gender:'men',owner:'爸爸',addedDate:'2026-05-10',wearCount:18},
 ];
 
 const defaultAlerts = [
@@ -1364,14 +1486,14 @@ function setData(key, val) {
 }
 
 function initDefaultData() {
-  const DATA_VERSION = 'v6';
+  const DATA_VERSION = 'v8';
   if (localStorage.getItem(CLOTHING_KEY) && localStorage.getItem('wardrobe_version') === DATA_VERSION) {
     return; // 已有最新数据
   }
   // 为默认衣物添加图片路径
   const clothesWithImages = defaultClothes.map(c => {
     if (c.image && c.image.length > 0) return c; // 已有图片（用户上传的）
-    // 根据ID匹配预置图片（缩略图用于列表，高清图用于详情）
+    // 根据ID匹配预置图片（全新40件衣物）
     const imgMap = {
       'w01':'images/w01.jpg','w02':'images/w02.jpg','w03':'images/w03.jpg','w04':'images/w04.jpg','w05':'images/w05.jpg',
       'w06':'images/w06.jpg','w07':'images/w07.jpg','w08':'images/w08.jpg','w09':'images/w09.jpg','w10':'images/w10.jpg',
@@ -1381,25 +1503,8 @@ function initDefaultData() {
       'm06':'images/m06.jpg','m07':'images/m07.jpg','m08':'images/m08.jpg','m09':'images/m09.jpg','m10':'images/m10.jpg',
       'm11':'images/m11.jpg','m12':'images/m12.jpg','m13':'images/m13.jpg','m14':'images/m14.jpg','m15':'images/m15.jpg',
       'm16':'images/m16.jpg','m17':'images/m17.jpg','m18':'images/m18.jpg','m19':'images/m19.jpg','m20':'images/m20.jpg',
-      'w21':'images/w21.jpg','w22':'images/w22.jpg','w23':'images/w23.jpg','w24':'images/w24.jpg','w25':'images/w25.jpg',
-      'w26':'images/w26.jpg','w27':'images/w27.jpg','w28':'images/w28.jpg','w29':'images/w29.jpg',
-      'm21':'images/m21.jpg','m22':'images/m22.jpg','m23':'images/m23.jpg','m24':'images/m24.jpg','m25':'images/m25.jpg',
-      'm26':'images/m26.jpg','m27':'images/m27.jpg','m28':'images/m28.jpg','m29':'images/m29.jpg',
     };
-    const thumbMap = {
-      'w01':'images/thumbs/w01.jpg','w02':'images/thumbs/w02.jpg','w03':'images/thumbs/w03.jpg','w04':'images/thumbs/w04.jpg','w05':'images/thumbs/w05.jpg',
-      'w06':'images/thumbs/w06.jpg','w07':'images/thumbs/w07.jpg','w08':'images/thumbs/w08.jpg','w09':'images/thumbs/w09.jpg','w10':'images/thumbs/w10.jpg',
-      'w11':'images/thumbs/w11.jpg','w12':'images/thumbs/w12.jpg','w13':'images/thumbs/w13.jpg','w14':'images/thumbs/w14.jpg','w15':'images/thumbs/w15.jpg',
-      'w16':'images/thumbs/w16.jpg','w17':'images/thumbs/w17.jpg','w18':'images/thumbs/w18.jpg','w19':'images/thumbs/w19.jpg','w20':'images/thumbs/w20.jpg',
-      'm01':'images/thumbs/m01.jpg','m02':'images/thumbs/m02.jpg','m03':'images/thumbs/m03.jpg','m04':'images/thumbs/m04.jpg','m05':'images/thumbs/m05.jpg',
-      'm06':'images/thumbs/m06.jpg','m07':'images/thumbs/m07.jpg','m08':'images/thumbs/m08.jpg','m09':'images/thumbs/m09.jpg','m10':'images/thumbs/m10.jpg',
-      'm11':'images/thumbs/m11.jpg','m12':'images/thumbs/m12.jpg','m13':'images/thumbs/m13.jpg','m14':'images/thumbs/m14.jpg','m15':'images/thumbs/m15.jpg',
-      'm16':'images/thumbs/m16.jpg','m17':'images/thumbs/m17.jpg','m18':'images/thumbs/m18.jpg','m19':'images/thumbs/m19.jpg','m20':'images/thumbs/m20.jpg',
-      'w21':'images/thumbs/w21.jpg','w22':'images/thumbs/w22.jpg','w23':'images/thumbs/w23.jpg','w24':'images/thumbs/w24.jpg','w25':'images/thumbs/w25.jpg',
-      'w26':'images/thumbs/w26.jpg','w27':'images/thumbs/w27.jpg','w28':'images/thumbs/w28.jpg','w29':'images/thumbs/w29.jpg',
-      'm21':'images/thumbs/m21.jpg','m22':'images/thumbs/m22.jpg','m23':'images/thumbs/m23.jpg','m24':'images/thumbs/m24.jpg','m25':'images/thumbs/m25.jpg',
-      'm26':'images/thumbs/m26.jpg','m27':'images/thumbs/m27.jpg','m28':'images/thumbs/m28.jpg','m29':'images/thumbs/m29.jpg',
-    };
+    const thumbMap = imgMap; // 使用原图作为缩略图
     if (imgMap[c.id]) {
       return {...c, image: imgMap[c.id], thumb: thumbMap[c.id] || imgMap[c.id]};
     }
@@ -1436,6 +1541,8 @@ function navigateTo(page) {
     window.scrollTo({top: 0, behavior: 'instant'});
 
     requestAnimationFrame(() => {
+      if (page === 'outfit-history') renderOutfitHistory();
+      if (page === 'stats') updateStats();
       targetEl.classList.add('visible');
     });
 
@@ -1451,6 +1558,9 @@ function navigateTo(page) {
     if (page === 'alerts') renderAlerts();
     if (page === 'stats') updateStats();
     if (page === 'add') resetAddForm();
+    if (page === 'settings') loadSettings();
+    if (page === 'style-pref') renderStylePreferences();
+    if (page === 'wear-report') renderWearReport();
     // 离开衣橱页面时退出批量模式
     if (page !== 'wardrobe' && isBatchMode) {
       isBatchMode = false;
@@ -1680,7 +1790,43 @@ function viewClothingDetail(id) {
 }
 
 function editClothing() {
-  showToast('编辑功能开发中');
+  const clothes = getData(CLOTHING_KEY, defaultClothes);
+  const item = clothes.find(c => String(c.id) === String(currentClothingId));
+  if (!item) { showToast('未找到衣物信息'); return; }
+
+  // 标记为编辑模式
+  window.editingClothingId = currentClothingId;
+
+  // 预填表单
+  document.getElementById('cloth-name').value = item.name || '';
+  document.getElementById('cloth-category').value = item.category || 'top';
+  document.getElementById('cloth-season').value = item.season || 'all';
+
+  // 预选颜色
+  if (item.color) {
+    const dots = document.querySelectorAll('#color-picker .color-dot');
+    dots.forEach(d => {
+      d.classList.remove('selected');
+      if (d.dataset.color && d.dataset.color.toLowerCase() === item.color.toLowerCase()) {
+        d.classList.add('selected');
+        selectedColor = d.dataset.color;
+        selectedColorName = d.dataset.name;
+      }
+    });
+  }
+
+  // 预填图片
+  if (item.image) {
+    selectedImageBase64 = item.image;
+    document.getElementById('uploadArea').style.display = 'none';
+    document.getElementById('imagePreviewContainer').style.display = 'block';
+    document.getElementById('previewImage').src = item.image;
+  }
+
+  // 修改保存按钮文字
+  document.querySelector('#page-add .btn-gold').textContent = '保存修改';
+
+  navigateTo('add');
 }
 
 // 删除确认
@@ -2050,6 +2196,27 @@ function saveClothing() {
   const category = document.getElementById('cloth-category').value;
   const season = document.getElementById('cloth-season').value;
 
+  // 编辑模式
+  if (window.editingClothingId) {
+    const clothes = getData(CLOTHING_KEY, defaultClothes);
+    const idx = clothes.findIndex(c => String(c.id) === String(window.editingClothingId));
+    if (idx !== -1) {
+      clothes[idx].name = name;
+      clothes[idx].category = category;
+      clothes[idx].season = season;
+      clothes[idx].color = selectedColor;
+      clothes[idx].colorName = selectedColorName;
+      if (selectedImageBase64) clothes[idx].image = selectedImageBase64;
+      setData(CLOTHING_KEY, clothes);
+      showToast('修改成功');
+      resetAddForm();
+      window.editingClothingId = null;
+      document.querySelector('#page-add .btn-gold').textContent = '保存到衣橱';
+      goBack();
+      return;
+    }
+  }
+
   // 验证
   let hasError = false;
   
@@ -2126,6 +2293,9 @@ function resetAddForm() {
   document.getElementById('status-frequent').className = 'status-btn active-green';
   document.getElementById('status-outdated').className = 'status-btn';
   selectedStatus = 'frequent';
+
+  window.editingClothingId = null;
+  document.querySelector('#page-add .btn-gold').textContent = '保存到衣橱';
 }
 
 // ===== Weather API (Open-Meteo 免费API，无需Key) =====
@@ -2491,29 +2661,30 @@ function renderMainOutfit() {
   const outfit = currentRecommendations[currentMainOutfitIndex];
   const container = document.getElementById('main-outfit-area');
 
-  // 风格到模特模板图的映射
+  // 风格到模特模板图的映射（全新18张模板）
   const modelTemplateMap = {
-    // 女装
-    'casual': 'images/model_w_casual.jpg',
-    'business': 'images/model_w_business.jpg',
-    'sport': 'images/model_w_sport.jpg',
-    'retro': 'images/model_w_retro.jpg',
-    'french': 'images/model_w_french.jpg',
-    'japanese': 'images/model_w_japanese.jpg',
-    'korean': 'images/model_w_korean.jpg',
-    'street': 'images/model_w_street.jpg',
+    // 女装10种风格
+    'minimal': 'images/model_w_minimal.jpg',
+    'commute': 'images/model_w_commute.jpg',
     'romantic': 'images/model_w_romantic.jpg',
-    'resort': 'images/model_w_resort.jpg',
-    // 男装
-    'casual_m': 'images/model_m_casual.jpg',
-    'business_m': 'images/model_m_business.jpg',
-    'sport_m': 'images/model_m_sport.jpg',
+    'sporty': 'images/model_w_sporty.jpg',
+    'vintage': 'images/model_w_vintage.jpg',
+    'korean': 'images/model_w_korean.jpg',
+    'elegant': 'images/model_w_elegant.jpg',
+    'street': 'images/model_w_street.jpg',
+    'vacation': 'images/model_w_vacation.jpg',
+    'cozy': 'images/model_w_cozy.jpg',
+    // 男装8种风格
+    'business': 'images/model_m_business.jpg',
+    'casual': 'images/model_m_casual.jpg',
+    'athletic': 'images/model_m_athletic.jpg',
     'workwear': 'images/model_m_workwear.jpg',
-    'denim': 'images/model_m_denim.jpg',
-    'classic': 'images/model_m_classic.jpg',
+    'japanese': 'images/model_m_japanese.jpg',
+    'urban': 'images/model_m_urban.jpg',
+    'gentleman': 'images/model_m_gentleman.jpg',
+    'outdoor': 'images/model_m_outdoor.jpg',
     'preppy': 'images/model_m_preppy.jpg',
-    'japanese_m': 'images/model_m_japanese.jpg',
-    'street_m': 'images/model_m_street.jpg',
+    'summer': 'images/model_m_summer.jpg',
   };
 
   // 根据风格和性别选择模特图
@@ -2615,6 +2786,7 @@ function selectFamilyMember(el) {
   document.querySelectorAll('.family-member').forEach(m => m.classList.remove('active'));
   el.classList.add('active');
   const name = el.dataset.name || '妈妈';
+  const gender = el.dataset.gender || 'women';
   document.getElementById('home-title').textContent = name + '的今日穿搭';
   renderHomeRecommendations();
 }
@@ -2675,14 +2847,236 @@ function resolveAlert(id, action) {
 function updateStats() {
   const clothes = getData(CLOTHING_KEY, defaultClothes);
   const alerts = getData(ALERTS_KEY, defaultAlerts);
+  const history = getOutfitHistory();
   const activeAlerts = alerts.filter(a => !a.resolved);
 
   document.getElementById('stat-total').textContent = clothes.length;
+  document.getElementById('stat-outfits').textContent = history.length;
   document.getElementById('stat-alerts').textContent = activeAlerts.length;
 
   const frequentCount = clothes.filter(c => c.status === 'frequent').length;
   const wearRate = clothes.length > 0 ? Math.round((frequentCount / clothes.length) * 100) : 0;
   document.getElementById('stat-wear').textContent = wearRate + '%';
+
+  // 类别分布
+  const categoryMap = {top:'上装',bottom:'下装',outer:'外套',shoes:'鞋履',accessory:'配饰'};
+  const catCounts = {};
+  clothes.forEach(c => { catCounts[c.category] = (catCounts[c.category] || 0) + 1; });
+  const maxCat = Math.max(...Object.values(catCounts), 1);
+  document.getElementById('stat-category-bars').innerHTML = Object.entries(categoryMap).map(([key, label]) => {
+    const count = catCounts[key] || 0;
+    const pct = Math.round((count / maxCat) * 100);
+    return '<div class="stat-bar-row"><span class="stat-bar-label">' + label + '</span><div class="stat-bar-track"><div class="stat-bar-fill" style="width:' + pct + '%"></div></div><span class="stat-bar-val">' + count + '</span></div>';
+  }).join('');
+
+  // 季节分布
+  const seasonMap = {spring:'春季',summer:'夏季',autumn:'秋季',winter:'冬季',all:'四季'};
+  const seasonCounts = {};
+  clothes.forEach(c => { seasonCounts[c.season] = (seasonCounts[c.season] || 0) + 1; });
+  const maxSeason = Math.max(...Object.values(seasonCounts), 1);
+  document.getElementById('stat-season-bars').innerHTML = Object.entries(seasonMap).map(([key, label]) => {
+    const count = seasonCounts[key] || 0;
+    const pct = Math.round((count / maxSeason) * 100);
+    return '<div class="stat-bar-row"><span class="stat-bar-label">' + label + '</span><div class="stat-bar-track"><div class="stat-bar-fill" style="width:' + pct + '%"></div></div><span class="stat-bar-val">' + count + '</span></div>';
+  }).join('');
+
+  // 风格分布
+  const styleCounts = {};
+  clothes.forEach(c => { if (c.style) styleCounts[c.style] = (styleCounts[c.style] || 0) + 1; });
+  const sortedStyles = Object.entries(styleCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const maxStyle = sortedStyles.length > 0 ? sortedStyles[0][1] : 1;
+  document.getElementById('stat-style-bars').innerHTML = sortedStyles.map(([key, count]) => {
+    const label = styleMap[key] || key;
+    const pct = Math.round((count / maxStyle) * 100);
+    return '<div class="stat-bar-row"><span class="stat-bar-label">' + label + '</span><div class="stat-bar-track"><div class="stat-bar-fill" style="width:' + pct + '%"></div></div><span class="stat-bar-val">' + count + '</span></div>';
+  }).join('');
+}
+
+// ===== Outfit History =====
+function renderOutfitHistory() {
+  const history = getOutfitHistory();
+  const container = document.getElementById('history-list');
+  const countEl = document.getElementById('history-count');
+  if (countEl) countEl.textContent = history.length + '条记录';
+
+  if (history.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:60px 0;color:var(--text-muted);font-size:13px"><div style="font-size:36px;margin-bottom:10px">📋</div>暂无穿搭记录<br><span style="font-size:11px">采纳推荐穿搭后会自动保存</span></div>';
+    return;
+  }
+
+  container.innerHTML = history.map((record, idx) => {
+    const date = record.date || '未知日期';
+    const items = (record.items || []).map(i => i.name || i.icon || '单品').join(' + ');
+    const score = record.harmonyScore ? Math.round(record.harmonyScore * 100) + '分' : '';
+    const weather = record.weather ? record.weather.temp + '°C ' + (record.weather.text || '') : '';
+    return '<div class="glass-card" style="margin-bottom:12px;padding:18px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        '<span style="font-size:12px;color:var(--text-muted)">' + date + '</span>' +
+        (score ? '<span style="font-size:11px;color:var(--gold);background:rgba(196,167,125,0.1);padding:3px 10px;border-radius:20px">' + score + '</span>' : '') +
+      '</div>' +
+      '<div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:6px">' + items + '</div>' +
+      (weather ? '<div style="font-size:11px;color:var(--text-muted)">' + weather + '</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+// ===== Family Member Selector =====
+function addFamilyMember() {
+  const name = prompt_custom('请输入成员名称');
+  if (!name || !name.trim()) return;
+  const gender = prompt_custom('请输入性别（女/男）');
+  const genderVal = (gender && gender.trim().includes('男')) ? 'men' : 'women';
+
+  const familyRow = document.querySelector('.family-row');
+  if (!familyRow) return;
+
+  // 移除旧的"添加成员"按钮
+  const addBtn = familyRow.querySelector('.family-member:last-child');
+  if (addBtn && addBtn.querySelector('.fm-add')) {
+    addBtn.remove();
+  }
+
+  // 创建新成员
+  const newMember = document.createElement('div');
+  newMember.className = 'family-member';
+  newMember.dataset.name = name.trim();
+  newMember.setAttribute('onclick', 'selectFamilyMember(this)');
+  newMember.innerHTML = '<div class="fm-avatar"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#A89F91" stroke-width="1.2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#A89F91" stroke-width="1.2" stroke-linecap="round"/></svg></div><span class="fm-name">' + name.trim() + '</span>';
+  newMember.dataset.gender = genderVal;
+  familyRow.appendChild(newMember);
+
+  // 重新添加"添加成员"按钮
+  const newAddBtn = document.createElement('div');
+  newAddBtn.className = 'family-member';
+  newAddBtn.setAttribute('onclick', 'addFamilyMember()');
+  newAddBtn.innerHTML = '<div class="fm-add">+</div><span class="fm-name" style="color:#B8A99A">添加成员</span>';
+  familyRow.appendChild(newAddBtn);
+
+  showToast('"' + name.trim() + '" 已添加');
+}
+
+// 简易 prompt 替代（不使用原生 prompt）
+function prompt_custom(message) {
+  const result = window.prompt(message);
+  return result;
+}
+
+// ===== Style Preference =====
+function renderStylePreferences() {
+  const prefs = loadUserPreferences();
+  const container = document.getElementById('style-pref-list');
+  if (!container) return;
+
+  const styles = Object.entries(prefs.styleWeights || {}).sort((a, b) => b[1] - a[1]);
+  if (styles.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">暂无偏好数据，采纳穿搭后自动学习</div>';
+    return;
+  }
+
+  const maxW = styles[0][1] || 1;
+  container.innerHTML = styles.map(([key, weight]) => {
+    const label = styleMap[key] || key;
+    const pct = Math.round((weight / maxW) * 100);
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' +
+      '<span style="font-size:12px;color:var(--text-secondary);width:60px;flex-shrink:0">' + label + '</span>' +
+      '<div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden">' +
+        '<div style="height:100%;width:' + pct + '%;background:var(--gold);border-radius:4px;transition:width 0.3s"></div>' +
+      '</div>' +
+      '<span style="font-size:11px;color:var(--text-muted);width:30px;text-align:right">' + Math.round(weight * 100) + '</span>' +
+    '</div>';
+  }).join('');
+
+  // 颜色偏好
+  const colorContainer = document.getElementById('color-pref-list');
+  if (!colorContainer) return;
+  const colors = Object.entries(prefs.colorWeights || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  if (colors.length === 0) {
+    colorContainer.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">暂无偏好数据</div>';
+    return;
+  }
+  colorContainer.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:10px">' + colors.map(([color, weight]) => {
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px">' +
+      '<div style="width:36px;height:36px;border-radius:50%;background:' + color + ';border:2px solid var(--border-subtle)"></div>' +
+      '<span style="font-size:10px;color:var(--text-muted)">' + Math.round(weight * 100) + '</span>' +
+    '</div>';
+  }).join('') + '</div>';
+}
+
+function resetPreferences() {
+  if (confirm('确定要重置所有风格偏好吗？')) {
+    localStorage.removeItem('wardrobe_user_preferences');
+    loadUserPreferences();
+    renderStylePreferences();
+    showToast('偏好已重置');
+  }
+}
+
+// ===== Wear Report =====
+function renderWearReport() {
+  const clothes = getData(CLOTHING_KEY, defaultClothes);
+  const history = getOutfitHistory();
+  const container = document.getElementById('wear-report-content');
+  if (!container) return;
+
+  // 统计每件衣物的穿着次数（从历史记录）
+  const wearCounts = {};
+  history.forEach(record => {
+    (record.items || []).forEach(item => {
+      const id = item.id || item.name;
+      wearCounts[id] = (wearCounts[id] || 0) + 1;
+    });
+  });
+
+  // 也统计衣物数据中的 wearCount
+  clothes.forEach(c => {
+    wearCounts[c.id] = (wearCounts[c.id] || 0) + (c.wearCount || 0);
+  });
+
+  // 排序
+  const sorted = Object.entries(wearCounts).sort((a, b) => b[1] - a[1]);
+  const topWorn = sorted.slice(0, 5);
+  const leastWorn = sorted.slice(-5).reverse();
+
+  // 总采纳次数
+  const totalAdoptions = history.length;
+
+  // 最常穿的风格
+  const styleCounts = {};
+  history.forEach(r => { if (r.style) styleCounts[r.style] = (styleCounts[r.style] || 0) + 1; });
+  const topStyle = Object.entries(styleCounts).sort((a, b) => b[1] - a[1])[0];
+
+  container.innerHTML =
+    '<div class="glass-card" style="margin-bottom:16px;text-align:center;padding:24px">' +
+      '<div style="font-size:36px;font-weight:200;color:var(--gold);margin-bottom:8px">' + totalAdoptions + '</div>' +
+      '<div style="font-size:13px;color:var(--text-secondary)">累计采纳搭配</div>' +
+      (topStyle ? '<div style="margin-top:8px;font-size:12px;color:var(--text-muted)">最爱风格：' + (styleMap[topStyle[0]] || topStyle[0]) + '</div>' : '') +
+    '</div>' +
+    '<div class="glass-card" style="margin-bottom:16px">' +
+      '<div class="form-label" style="margin-bottom:12px">高频穿着 TOP 5</div>' +
+      topWorn.map(([id, count]) => {
+        const item = clothes.find(c => c.id === id);
+        const name = item ? item.name : id;
+        const icon = item ? (item.icon || '👕') : '👕';
+        return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
+          '<span style="font-size:20px">' + icon + '</span>' +
+          '<span style="flex:1;font-size:13px;color:var(--text)">' + name + '</span>' +
+          '<span style="font-size:12px;color:var(--gold)">' + count + '次</span>' +
+        '</div>';
+      }).join('') +
+    '</div>' +
+    '<div class="glass-card">' +
+      '<div class="form-label" style="margin-bottom:12px">待唤醒衣物</div>' +
+      (leastWorn.length > 0 ? leastWorn.map(([id, count]) => {
+        const item = clothes.find(c => c.id === id);
+        const name = item ? item.name : id;
+        const icon = item ? (item.icon || '👕') : '👕';
+        return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">' +
+          '<span style="font-size:20px">' + icon + '</span>' +
+          '<span style="flex:1;font-size:13px;color:var(--text)">' + name + '</span>' +
+          '<span style="font-size:12px;color:var(--text-muted)">' + count + '次</span>' +
+        '</div>';
+      }).join('') : '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">数据不足</div>') +
+    '</div>';
 }
 
 // ===== Family Member Selector =====
@@ -2696,9 +3090,116 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// ===== Data Backup & Restore =====
+function exportData() {
+  const data = {
+    version: 'v8',
+    exportDate: getCurrentDate(),
+    clothes: getData(CLOTHING_KEY, []),
+    alerts: getData(ALERTS_KEY, []),
+    outfitHistory: getOutfitHistory(),
+    userPreferences: getData('wardrobe_user_preferences', {}),
+    selectedCity: localStorage.getItem('wardrobe_selected_city') || ''
+  };
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '衣橱管家_备份_' + getCurrentDate() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('数据已导出');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.clothes) { showToast('无效的备份文件'); return; }
+      
+      if (confirm('导入将覆盖当前所有数据，确定继续吗？')) {
+        if (data.clothes) setData(CLOTHING_KEY, data.clothes);
+        if (data.alerts) setData(ALERTS_KEY, data.alerts);
+        if (data.outfitHistory) setData('wardrobe_outfit_history', data.outfitHistory);
+        if (data.userPreferences) setData('wardrobe_user_preferences', data.userPreferences);
+        if (data.selectedCity) localStorage.setItem('wardrobe_selected_city', data.selectedCity);
+        
+        showToast('数据导入成功，即将刷新');
+        setTimeout(() => location.reload(), 1000);
+      }
+    } catch (err) {
+      showToast('文件解析失败');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearAllData() {
+  if (confirm('确定要清除所有数据吗？此操作不可恢复！')) {
+    if (confirm('再次确认：所有衣物、穿搭历史和偏好将被永久删除！')) {
+      localStorage.removeItem(CLOTHING_KEY);
+      localStorage.removeItem(ALERTS_KEY);
+      localStorage.removeItem('wardrobe_outfit_history');
+      localStorage.removeItem('wardrobe_user_preferences');
+      localStorage.removeItem('wardrobe_selected_city');
+      localStorage.removeItem('wardrobe_version');
+      showToast('数据已清除，即将刷新');
+      setTimeout(() => location.reload(), 1000);
+    }
+  }
+}
+
+// ===== Settings =====
+function saveSetting(key, value) {
+  const settings = getData('wardrobe_settings', {});
+  settings[key] = value;
+  setData('wardrobe_settings', settings);
+  showToast('设置已保存');
+}
+
+function loadSettings() {
+  const settings = getData('wardrobe_settings', {});
+  const cityDisplay = document.getElementById('setting-city-display');
+  if (cityDisplay) {
+    const city = localStorage.getItem('wardrobe_selected_city') || '北京';
+    cityDisplay.textContent = city;
+  }
+}
+
+function clearCache() {
+  if ('caches' in window) {
+    caches.keys().then(names => {
+      names.forEach(name => caches.delete(name));
+      showToast('缓存已清除');
+    });
+  }
+}
+
 // ===== Init =====
 initDefaultData();
 loadUserPreferences();
+
+// 计算使用天数
+(function() {
+  const firstDate = localStorage.getItem('wardrobe_first_use');
+  const today = new Date().toDateString();
+  if (!firstDate) {
+    localStorage.setItem('wardrobe_first_use', today);
+  }
+  const start = new Date(firstDate || today);
+  const now = new Date();
+  const days = Math.max(1, Math.ceil((now - start) / (1000 * 60 * 60 * 24)));
+  const el = document.getElementById('profile-days');
+  if (el) el.textContent = '已使用衣橱管家 ' + days + ' 天';
+})();
 
 // Set initial page visible
 requestAnimationFrame(() => {
