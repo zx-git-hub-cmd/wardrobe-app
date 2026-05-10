@@ -2483,50 +2483,43 @@ function renderMainOutfit() {
   const outfit = currentRecommendations[currentMainOutfitIndex];
   const container = document.getElementById('main-outfit-area');
 
-  // 按类别整理衣物
-  const itemsByCategory = {};
-  outfit.items.forEach(item => {
-    if (!itemsByCategory[item.category]) itemsByCategory[item.category] = [];
-    itemsByCategory[item.category].push(item);
-  });
+  // 风格到模特模板图的映射
+  const modelTemplateMap = {
+    // 女装
+    'casual': 'images/model_w_casual.jpg',
+    'business': 'images/model_w_business.jpg',
+    'sport': 'images/model_w_sport.jpg',
+    'retro': 'images/model_w_retro.jpg',
+    'french': 'images/model_w_french.jpg',
+    'japanese': 'images/model_w_japanese.jpg',
+    'korean': 'images/model_w_korean.jpg',
+    'street': 'images/model_w_street.jpg',
+    'romantic': 'images/model_w_romantic.jpg',
+    'resort': 'images/model_w_resort.jpg',
+    // 男装
+    'casual_m': 'images/model_m_casual.jpg',
+    'business_m': 'images/model_m_business.jpg',
+    'sport_m': 'images/model_m_sport.jpg',
+    'workwear': 'images/model_m_workwear.jpg',
+    'denim': 'images/model_m_denim.jpg',
+    'classic': 'images/model_m_classic.jpg',
+    'preppy': 'images/model_m_preppy.jpg',
+    'japanese_m': 'images/model_m_japanese.jpg',
+    'street_m': 'images/model_m_street.jpg',
+  };
 
-  // 生成各部位的衣物图片
-  let slotsHtml = '';
-
-  // 外套（如果有）
-  const outer = (itemsByCategory['outer'] || [])[0];
-  if (outer && outer.image) {
-    slotsHtml += `<div class="mannequin-slot outer-slot"><img src="${outer.image}" alt="${outer.name}" loading="lazy"></div>`;
-  }
-
-  // 上装
-  const top = (itemsByCategory['top'] || [])[0];
-  if (top && top.image) {
-    slotsHtml += `<div class="mannequin-slot top-slot"><img src="${top.image}" alt="${top.name}" loading="lazy"></div>`;
-  }
-
-  // 下装
-  const bottom = (itemsByCategory['bottom'] || [])[0];
-  if (bottom && bottom.image) {
-    slotsHtml += `<div class="mannequin-slot bottom-slot"><img src="${bottom.image}" alt="${bottom.name}" loading="lazy"></div>`;
-  }
-
-  // 鞋子
-  const shoes = (itemsByCategory['shoes'] || [])[0];
-  if (shoes && shoes.image) {
-    slotsHtml += `<div class="mannequin-slot shoes-slot"><img src="${shoes.image}" alt="${shoes.name}" loading="lazy"></div>`;
-  }
-
-  // 配饰（支持多个，第二个偏移位置）
-  const accessories = itemsByCategory['accessory'] || [];
-  accessories.forEach((acc, idx) => {
-    if (acc && acc.image) {
-      const offsetStyle = idx === 0
-        ? ''
-        : 'top:50px;right:auto;left:5px;';
-      slotsHtml += `<div class="mannequin-slot acc-slot" style="${offsetStyle}"><img src="${acc.image}" alt="${acc.name}" loading="lazy"></div>`;
+  // 根据风格和性别选择模特图
+  const gender = outfit.gender || 'women';
+  const style = outfit.style || 'casual';
+  let modelKey = style;
+  // 男装风格加后缀区分
+  if (gender === 'men' && !style.endsWith('_m')) {
+    // 检查是否有男装专用模板
+    if (modelTemplateMap[style + '_m']) {
+      modelKey = style + '_m';
     }
-  });
+  }
+  const modelImage = modelTemplateMap[modelKey] || modelTemplateMap['casual'];
 
   // 穿搭单品列表（用小缩略图+名称）
   const itemsHtml = outfit.items.map(item => {
@@ -2545,9 +2538,8 @@ function renderMainOutfit() {
 
   container.innerHTML = `
     <div class="ai-tag">AI STYLIST</div>
-    <div class="mannequin-container" onclick="openFullscreen(this.querySelector('.mannequin-bg'))">
-      <img src="images/mannequin_clean.jpg" class="mannequin-bg" alt="模特">
-      <div class="mannequin-body">${slotsHtml}</div>
+    <div class="mannequin-container" onclick="openFullscreen(this.querySelector('.model-outfit-img'))">
+      <img src="${modelImage}" class="model-outfit-img" alt="${outfit.styleName}风格穿搭" style="width:100%;height:auto;object-fit:contain;border-radius:16px">
     </div>
     <div class="outfit-items">${itemsHtml}</div>
     <div class="outfit-title">${outfit.styleName}风格 · ${outfit.template}</div>

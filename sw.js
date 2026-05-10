@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wardrobe-app-v9';
+const CACHE_NAME = 'wardrobe-app-v10';
 const ASSETS = [
   '/index.html',
   '/manifest.json'
@@ -6,7 +6,6 @@ const ASSETS = [
 
 // 图片文件列表
 const IMAGE_FILES = [
-  '/images/mannequin_clean.jpg',
   '/images/w01.jpg','/images/w02.jpg','/images/w03.jpg','/images/w04.jpg','/images/w05.jpg',
   '/images/w06.jpg','/images/w07.jpg','/images/w08.jpg','/images/w09.jpg','/images/w10.jpg',
   '/images/w11.jpg','/images/w12.jpg','/images/w13.jpg','/images/w14.jpg','/images/w15.jpg',
@@ -29,13 +28,26 @@ const THUMB_FILES = [
   '/images/thumbs/m16.jpg','/images/thumbs/m17.jpg','/images/thumbs/m18.jpg','/images/thumbs/m19.jpg','/images/thumbs/m20.jpg',
 ];
 
+// 模特模板图（风格化穿搭展示）
+const MODEL_FILES = [
+  // 女装
+  '/images/model_w_casual.jpg','/images/model_w_business.jpg','/images/model_w_sport.jpg',
+  '/images/model_w_retro.jpg','/images/model_w_french.jpg','/images/model_w_japanese.jpg',
+  '/images/model_w_korean.jpg','/images/model_w_street.jpg','/images/model_w_romantic.jpg',
+  '/images/model_w_resort.jpg',
+  // 男装
+  '/images/model_m_casual.jpg','/images/model_m_business.jpg','/images/model_m_sport.jpg',
+  '/images/model_m_workwear.jpg','/images/model_m_denim.jpg','/images/model_m_classic.jpg',
+  '/images/model_m_preppy.jpg','/images/model_m_japanese.jpg','/images/model_m_street.jpg',
+];
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // 优先缓存缩略图（快速加载），然后缓存高清图
-      return cache.addAll([...ASSETS, ...THUMB_FILES]).then(() => {
+      // 优先缓存缩略图和模特模板，确保快速首屏
+      return cache.addAll([...ASSETS, ...THUMB_FILES, ...MODEL_FILES]).then(() => {
         return cache.addAll(IMAGE_FILES);
-      }).catch(() => {}); // 高清图缓存失败不影响缩略图
+      }).catch(() => {});
     })
   );
   self.skipWaiting();
@@ -53,7 +65,6 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // 网络优先策略：优先从网络获取最新内容
   event.respondWith(
     fetch(event.request).then((fetchResponse) => {
       if (fetchResponse.status === 200) {
@@ -64,7 +75,6 @@ self.addEventListener('fetch', (event) => {
       }
       return fetchResponse;
     }).catch(() => {
-      // 网络不可用时，回退到缓存
       return caches.match(event.request).then((response) => {
         return response || caches.match('/index.html');
       });
