@@ -2172,23 +2172,232 @@ async function autoClassifyClothing(imageSrc) {
     aiTag.style.color = 'var(--text-muted)';
   }
   
-  const result = await classifyClothingImage(imageSrc);
+  // 并行执行：颜色检测（本地）+ 分类识别（MobileNet）
+  const [colorResult, categoryResult] = await Promise.all([
+    detectClothingColor(imageSrc),
+    classifyClothingImage(imageSrc)
+  ]);
   
-  if (result && result.confidence > 0.05) {
-    categorySelect.value = result.category;
-    if (aiTag) {
-      aiTag.textContent = 'AI识别 ✓';
-      aiTag.style.color = 'var(--gold)';
-    }
-    const categoryNames = { top: '上装', bottom: '下装', outer: '外套', shoes: '鞋履', accessory: '配饰' };
-    showToast('AI识别为：' + (categoryNames[result.category] || result.category));
-  } else {
-    if (aiTag) {
-      aiTag.textContent = 'AI未识别';
-      aiTag.style.color = 'var(--text-muted)';
-      setTimeout(() => { aiTag.style.display = 'none'; }, 2000);
-    }
+  const category = categoryResult ? categoryResult.category : 'top';
+  const categoryNames = { top: '上装', bottom: '下装', outer: '外套', shoes: '鞋履', accessory: '配饰' };
+  const categoryTypeNames = {
+    top: ['T恤','衬衫','针织衫','卫衣','毛衣','背心','吊带'],
+    bottom: ['长裤','短裤','半裙','长裙','阔腿裤','牛仔裤','运动裤'],
+    outer: ['外套','大衣','夹克','风衣','西装','羽绒服','棉服'],
+    shoes: ['运动鞋','皮鞋','凉鞋','靴子','高跟鞋','帆布鞋','拖鞋'],
+    accessory: ['包包','帽子','围巾','项链','手表','皮带','手链']
+  };
+  
+  // 1. 填充分类
+  categorySelect.value = category;
+  
+  // 2. 填充颜色
+  if (colorResult) {
+    selectedColor = colorResult.hex;
+    selectedColorName = colorResult.name;
+    // 高亮对应的颜色点
+    const dots = document.querySelectorAll('.color-dot');
+    let matched = false;
+    dots.forEach(d => {
+      d.classList.remove('selected');
+      if (colorMatch(d.dataset.color, colorResult.hex)) {
+        d.classList.add('selected');
+        matched = true;
+      }
+    });
+    if (!matched && dots.length > 0) dots[0].classList.add('selected');
   }
+  
+  // 3. 生成名称
+  const colorName = colorResult ? colorResult.name : '';
+  const typeNames = categoryTypeNames[category] || ['衣物'];
+  const typeName = typeNames[Math.floor(Math.random() * typeNames.length)];
+  const nameInput = document.getElementById('cloth-name');
+  if (colorName && !nameInput.value.trim()) {
+    nameInput.value = colorName + typeName;
+  } else if (!nameInput.value.trim()) {
+    nameInput.value = typeName;
+  }
+  
+  // 4. 推断季节
+  const season = inferSeason(category, colorResult);
+  document.getElementById('cloth-season').value = season;
+  
+  // 更新状态
+  if (aiTag) {
+    aiTag.textContent = 'AI识别 ✓';
+    aiTag.style.color = 'var(--gold)';
+  }
+  
+  const parts = [categoryNames[category]];
+  if (colorResult) parts.push(colorResult.name);
+  const seasonNames = { spring:'春', summer:'夏', autumn:'秋', winter:'冬', all:'四季' };
+  parts.push(seasonNames[season] + '季');
+  showToast('AI识别：' + parts.join(' · '));
+}
+
+// ===== 颜色检测（Canvas像素分析）=====
+function detectClothingColor(imageSrc) {
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const size = 100; // 缩小到100x100加速计算
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, size, size);
+        
+        const imageData = ctx.getImageData(0, 0, size, size).data;
+        const colorCounts = {};
+        
+        // 采样像素（每隔2个像素采样一次）
+        for (let i = 0; i < imageData.length; i += 8) {
+          const r = imageData[i];
+          const g = imageData[i + 1];
+          const b = imageData[i + 2];
+          const a = imageData[i + 3];
+          
+          // 跳过透明和接近白色背景的像素
+          if (a < 128) continue;
+          if (r > 240 && g > 240 && b > 240) continue;
+          
+          // 量化颜色（减少颜色数量）
+          const qr = Math.round(r / 32) * 32;
+          const qg = Math.round(g / 32) * 32;
+          const qb = Math.round(b / 32) * 32;
+          const key = qr + ',' + qg + ',' + qb;
+          colorCounts[key] = (colorCounts[key] || 0) + 1;
+        }
+        
+        // 找到最多的颜色
+        let maxCount = 0;
+        let dominantColor = null;
+        for (const [key, count] of Object.entries(colorCounts)) {
+          if (count > maxCount) {
+            maxCount = count;
+            dominantColor = key.split(',').map(Number);
+          }
+        }
+        
+        if (dominantColor) {
+          const hex = rgbToHex(dominantColor[0], dominantColor[1], dominantColor[2]);
+          const name = hexToChineseColorName(dominantColor[0], dominantColor[1], dominantColor[2]);
+          resolve({ hex, name, rgb: dominantColor });
+        } else {
+          resolve(null);
+        }
+      };
+      img.onerror = function() { resolve(null); };
+      img.src = imageSrc;
+    } catch (e) {
+      resolve(null);
+    }
+  });
+}
+
+function rgbToHex(r, g, b) {
+  return '#' + [r, g, b].map(v => Math.min(255, Math.max(0, v)).toString(16).padStart(2, '0')).join('');
+}
+
+function colorMatch(hex1, hex2) {
+  const c1 = hexToRgb(hex1);
+  const c2 = hexToRgb(hex2);
+  if (!c1 || !c2) return false;
+  const dist = Math.sqrt(
+    Math.pow(c1[0] - c2[0], 2) +
+    Math.pow(c1[1] - c2[1], 2) +
+    Math.pow(c1[2] - c2[2], 2)
+  );
+  return dist < 80; // 色差阈值
+}
+
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null;
+}
+
+// RGB → 中文颜色名
+function hexToChineseColorName(r, g, b) {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2 / 255; // 亮度
+  const s = max === min ? 0 : (max - min) / (l > 0.5 ? (510 - max - min) : (max + min)); // 饱和度
+  
+  // 黑白灰判断
+  if (l < 0.15) return '黑色';
+  if (l > 0.85 && s < 0.1) return '白色';
+  if (s < 0.12) return '灰色';
+  
+  // 色相判断
+  let h;
+  const d = max - min;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+  else if (max === g) h = ((b - r) / d + 2) * 60;
+  else h = ((r - g) / d + 4) * 60;
+  
+  // 亮度修饰
+  let prefix = '';
+  if (l < 0.3) prefix = '深';
+  else if (l > 0.7) prefix = '浅';
+  
+  // 饱和度修饰
+  let satPrefix = '';
+  if (s < 0.3) satPrefix = '灰';
+  
+  if (h < 15 || h >= 345) return prefix + satPrefix + '红色';
+  if (h < 35) return prefix + satPrefix + '橙色';
+  if (h < 55) return prefix + satPrefix + '黄色';
+  if (h < 80) return prefix + satPrefix + '黄绿色';
+  if (h < 160) return prefix + satPrefix + '绿色';
+  if (h < 200) return prefix + satPrefix + '青色';
+  if (h < 250) return prefix + satPrefix + '蓝色';
+  if (h < 290) return prefix + satPrefix + '紫色';
+  if (h < 345) return prefix + satPrefix + '粉色';
+  return '未知色';
+}
+
+// ===== 季节推断 =====
+function inferSeason(category, colorResult) {
+  // 外套类默认秋/冬
+  if (category === 'outer') {
+    if (colorResult) {
+      const l = (Math.max(...colorResult.rgb) + Math.min(...colorResult.rgb)) / 2 / 255;
+      if (l > 0.6) return 'spring'; // 浅色外套→春
+      return 'autumn'; // 深色外套→秋
+    }
+    return 'autumn';
+  }
+  
+  // 鞋履和配饰默认四季
+  if (category === 'shoes' || category === 'accessory') return 'all';
+  
+  // 根据颜色推断季节
+  if (colorResult) {
+    const [r, g, b] = colorResult.rgb;
+    const h = (() => {
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+      if (d === 0) return 0;
+      if (max === r) return ((g - b) / d + (g < b ? 6 : 0)) * 60;
+      if (max === g) return ((b - r) / d + 2) * 60;
+      return ((r - g) / d + 4) * 60;
+    })();
+    const l = (Math.max(r, g, b) + Math.min(r, g, b)) / 2 / 255;
+    
+    // 暖色系 → 春/秋
+    if (h >= 15 && h < 55) return l > 0.6 ? 'spring' : 'autumn';
+    // 深色 → 秋/冬
+    if (l < 0.25) return 'winter';
+    // 冷色系 → 夏
+    if ((h >= 160 && h < 250) && l > 0.4) return 'summer';
+    // 浅色 → 春/夏
+    if (l > 0.75) return 'spring';
+  }
+  
+  // 默认四季
+  return 'all';
 }
 
 // 显示上传选择弹窗
