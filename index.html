@@ -3086,7 +3086,21 @@ function renderWearReport() {
 // ===== Service Worker Registration =====
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // 检测新版本并自动刷新
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'activated') {
+            // 新 SW 激活后刷新页面
+            if (navigator.serviceWorker.controller) {
+              showToast('检测到新版本，正在更新...');
+              setTimeout(() => window.location.reload(), 800);
+            }
+          }
+        });
+      });
+    }).catch(() => {});
   });
 }
 
