@@ -730,6 +730,9 @@ body{
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .fade-in{animation:fadeIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards}
 </style>
+  <!-- TensorFlow.js + MobileNet 本地AI识别 -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
 </head>
 <body>
 
@@ -992,13 +995,16 @@ body{
 
     <div class="form-group">
       <label class="form-label">类别</label>
-      <select class="form-select" id="cloth-category">
-        <option value="top">上装</option>
-        <option value="bottom">下装</option>
-        <option value="outer">外套</option>
-        <option value="shoes">鞋履</option>
-        <option value="accessory">配饰</option>
-      </select>
+      <div style="display:flex;align-items:center;gap:8px">
+        <select class="form-select" id="cloth-category" style="flex:1">
+          <option value="top">上装</option>
+          <option value="bottom">下装</option>
+          <option value="outer">外套</option>
+          <option value="shoes">鞋履</option>
+          <option value="accessory">配饰</option>
+        </select>
+        <span id="ai-tag" style="display:none;font-size:10px;color:var(--gold);background:rgba(196,167,125,0.1);padding:2px 8px;border-radius:10px;white-space:nowrap">AI识别</span>
+      </div>
     </div>
 
     <div class="form-group">
@@ -2059,6 +2065,131 @@ let selectedColor = '#FFFFFF';
 let selectedColorName = '白色';
 let selectedStatus = 'frequent';
 let selectedImageBase64 = '';
+let mobileNetModel = null; // MobileNet 模型实例
+let isModelLoading = false;
+
+// ===== AI 衣物分类识别 =====
+// MobileNet 类别名 → 衣物分类映射
+const clothingCategoryMap = {
+  // 上装 (top)
+  'jersey': 'top', 'suit': 'top', 'sweater': 'top', 'sweatshirt': 'top',
+  'cardigan': 'top', 'shirt': 'top', 'blouse': 'top', 'tank top': 'top',
+  't-shirt': 'top', 'henley': 'top', 'poncho': 'top', 'lab coat': 'top',
+  'bathing cap': 'top', 'gown': 'top', 'stole': 'top', 'bib': 'top',
+  'maillot': 'top', 'barrel': 'top', 'crash helmet': 'top',
+  // 下装 (bottom)
+  'jean': 'bottom', 'jeans': 'bottom', 'trousers': 'bottom', 'pants': 'bottom',
+  'shorts': 'bottom', 'skirt': 'bottom', 'miniskirt': 'bottom', 'sarong': 'bottom',
+  'suspender': 'bottom', 'brassiere': 'bottom', 'bikini': 'bottom',
+  'swimming trunks': 'bottom', 'diaper': 'bottom', 'hoopskirt': 'bottom',
+  'crinoline': 'bottom', 'petticoat': 'bottom',
+  // 外套 (outer)
+  'jacket': 'outer', 'coat': 'outer', 'overcoat': 'outer', 'raincoat': 'outer',
+  'parka': 'outer', 'anorak': 'outer', 'cloak': 'outer', 'cape': 'outer',
+  'cardigan': 'outer', 'blazer': 'outer', 'windbreaker': 'outer',
+  'cowboy boot': 'outer', 'fur coat': 'outer',
+  // 鞋履 (shoes)
+  'shoe': 'shoes', 'sneaker': 'shoes', 'sandal': 'shoes', 'boot': 'shoes',
+  'loafer': 'shoes', 'high heels': 'shoes', 'slipper': 'shoes',
+  'cowboy boot': 'shoes', 'running shoe': 'shoes', 'cleat': 'shoes',
+  // 配饰 (accessory)
+  'bag': 'accessory', 'backpack': 'accessory', 'purse': 'accessory',
+  'handbag': 'accessory', 'wallet': 'accessory', 'sunglasses': 'accessory',
+  'hat': 'accessory', 'cap': 'accessory', 'scarf': 'accessory',
+  'tie': 'accessory', 'belt': 'accessory', 'watch': 'accessory',
+  'necklace': 'accessory', 'bracelet': 'accessory', 'earring': 'accessory',
+  'ring': 'accessory', 'brooch': 'accessory', 'hair slide': 'accessory',
+  'kimono': 'accessory', 'sombrero': 'accessory', 'wig': 'accessory',
+  'knapsack': 'accessory', 'umbrella': 'accessory',
+};
+
+// 加载 MobileNet 模型（懒加载）
+async function loadMobileNetModel() {
+  if (mobileNetModel) return mobileNetModel;
+  if (isModelLoading) return null;
+  isModelLoading = true;
+  try {
+    mobileNetModel = await mobilenet.load({ version: 2, alpha: 0.5 });
+    console.log('MobileNet 模型加载成功');
+    return mobileNetModel;
+  } catch (err) {
+    console.warn('MobileNet 模型加载失败:', err);
+    return null;
+  } finally {
+    isModelLoading = false;
+  }
+}
+
+// 识别图片中的衣物分类
+async function classifyClothingImage(imageSrc) {
+  try {
+    const model = await loadMobileNetModel();
+    if (!model) return null;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = imageSrc;
+    });
+
+    const predictions = await model.classify(img, 5);
+    
+    // 遍历预测结果，匹配衣物分类
+    for (const pred of predictions) {
+      const className = pred.className.toLowerCase();
+      // 检查是否匹配已知衣物类别
+      for (const [keyword, category] of Object.entries(clothingCategoryMap)) {
+        if (className.includes(keyword)) {
+          return {
+            category: category,
+            confidence: pred.probability,
+            description: pred.className
+          };
+        }
+      }
+    }
+    
+    // 未匹配到衣物类别
+    return null;
+  } catch (err) {
+    console.warn('衣物识别失败:', err);
+    return null;
+  }
+}
+
+// 自动识别并填充分类
+async function autoClassifyClothing(imageSrc) {
+  const aiTag = document.getElementById('ai-tag');
+  const categorySelect = document.getElementById('cloth-category');
+  
+  // 显示识别中状态
+  if (aiTag) {
+    aiTag.style.display = 'inline';
+    aiTag.textContent = 'AI识别中...';
+    aiTag.style.color = 'var(--text-muted)';
+  }
+  
+  const result = await classifyClothingImage(imageSrc);
+  
+  if (result && result.confidence > 0.05) {
+    categorySelect.value = result.category;
+    if (aiTag) {
+      aiTag.textContent = 'AI识别 ✓';
+      aiTag.style.color = 'var(--gold)';
+    }
+    const categoryNames = { top: '上装', bottom: '下装', outer: '外套', shoes: '鞋履', accessory: '配饰' };
+    showToast('AI识别为：' + (categoryNames[result.category] || result.category));
+  } else {
+    if (aiTag) {
+      aiTag.textContent = 'AI未识别';
+      aiTag.style.color = 'var(--text-muted)';
+      setTimeout(() => { aiTag.style.display = 'none'; }, 2000);
+    }
+  }
+}
 
 // 显示上传选择弹窗
 function showUploadModal() {
@@ -2102,6 +2233,9 @@ function handleFileSelect(e) {
     document.getElementById('previewImage').src = base64;
     document.getElementById('uploadArea').style.display = 'none';
     document.getElementById('imagePreviewContainer').classList.add('show');
+    
+    // 自动AI识别衣物分类
+    autoClassifyClothing(base64);
   });
 
   // 清空input以便重复选择同一文件
@@ -2271,6 +2405,10 @@ function resetAddForm() {
   document.getElementById('uploadArea').style.display = 'flex';
   document.getElementById('imagePreviewContainer').classList.remove('show');
   document.getElementById('previewImage').src = '';
+
+  // 重置AI标签
+  const aiTag = document.getElementById('ai-tag');
+  if (aiTag) aiTag.style.display = 'none';
 
   // 重置表单
   document.getElementById('cloth-name').value = '';
