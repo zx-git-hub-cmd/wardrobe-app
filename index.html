@@ -1364,7 +1364,7 @@ function setData(key, val) {
 }
 
 function initDefaultData() {
-  const DATA_VERSION = 'v5';
+  const DATA_VERSION = 'v6';
   if (localStorage.getItem(CLOTHING_KEY) && localStorage.getItem('wardrobe_version') === DATA_VERSION) {
     return; // 已有最新数据
   }
@@ -1381,6 +1381,10 @@ function initDefaultData() {
       'm06':'images/m06.jpg','m07':'images/m07.jpg','m08':'images/m08.jpg','m09':'images/m09.jpg','m10':'images/m10.jpg',
       'm11':'images/m11.jpg','m12':'images/m12.jpg','m13':'images/m13.jpg','m14':'images/m14.jpg','m15':'images/m15.jpg',
       'm16':'images/m16.jpg','m17':'images/m17.jpg','m18':'images/m18.jpg','m19':'images/m19.jpg','m20':'images/m20.jpg',
+      'w21':'images/w21.jpg','w22':'images/w22.jpg','w23':'images/w23.jpg','w24':'images/w24.jpg','w25':'images/w25.jpg',
+      'w26':'images/w26.jpg','w27':'images/w27.jpg','w28':'images/w28.jpg','w29':'images/w29.jpg',
+      'm21':'images/m21.jpg','m22':'images/m22.jpg','m23':'images/m23.jpg','m24':'images/m24.jpg','m25':'images/m25.jpg',
+      'm26':'images/m26.jpg','m27':'images/m27.jpg','m28':'images/m28.jpg','m29':'images/m29.jpg',
     };
     const thumbMap = {
       'w01':'images/thumbs/w01.jpg','w02':'images/thumbs/w02.jpg','w03':'images/thumbs/w03.jpg','w04':'images/thumbs/w04.jpg','w05':'images/thumbs/w05.jpg',
@@ -1391,6 +1395,10 @@ function initDefaultData() {
       'm06':'images/thumbs/m06.jpg','m07':'images/thumbs/m07.jpg','m08':'images/thumbs/m08.jpg','m09':'images/thumbs/m09.jpg','m10':'images/thumbs/m10.jpg',
       'm11':'images/thumbs/m11.jpg','m12':'images/thumbs/m12.jpg','m13':'images/thumbs/m13.jpg','m14':'images/thumbs/m14.jpg','m15':'images/thumbs/m15.jpg',
       'm16':'images/thumbs/m16.jpg','m17':'images/thumbs/m17.jpg','m18':'images/thumbs/m18.jpg','m19':'images/thumbs/m19.jpg','m20':'images/thumbs/m20.jpg',
+      'w21':'images/thumbs/w21.jpg','w22':'images/thumbs/w22.jpg','w23':'images/thumbs/w23.jpg','w24':'images/thumbs/w24.jpg','w25':'images/thumbs/w25.jpg',
+      'w26':'images/thumbs/w26.jpg','w27':'images/thumbs/w27.jpg','w28':'images/thumbs/w28.jpg','w29':'images/thumbs/w29.jpg',
+      'm21':'images/thumbs/m21.jpg','m22':'images/thumbs/m22.jpg','m23':'images/thumbs/m23.jpg','m24':'images/thumbs/m24.jpg','m25':'images/thumbs/m25.jpg',
+      'm26':'images/thumbs/m26.jpg','m27':'images/thumbs/m27.jpg','m28':'images/thumbs/m28.jpg','m29':'images/thumbs/m29.jpg',
     };
     if (imgMap[c.id]) {
       return {...c, image: imgMap[c.id], thumb: thumbMap[c.id] || imgMap[c.id]};
