@@ -1035,6 +1035,24 @@ body{
     </div>
 
     <div class="form-group">
+      <label class="form-label">归属成员</label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap" id="owner-selector">
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:var(--text-secondary);padding:6px 12px;border-radius:8px;border:1px solid var(--border-subtle);transition:all 0.2s" class="owner-option" data-owner="妈妈" onclick="selectOwner(this)">
+          <input type="radio" name="owner" value="妈妈" checked style="display:none">👩 妈妈
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:var(--text-secondary);padding:6px 12px;border-radius:8px;border:1px solid var(--border-subtle);transition:all 0.2s" class="owner-option" data-owner="爸爸" onclick="selectOwner(this)">
+          <input type="radio" name="owner" value="爸爸" style="display:none">👨 爸爸
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:var(--text-secondary);padding:6px 12px;border-radius:8px;border:1px solid var(--border-subtle);transition:all 0.2s" class="owner-option" data-owner="女儿" onclick="selectOwner(this)">
+          <input type="radio" name="owner" value="女儿" style="display:none">👧 女儿
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:var(--text-secondary);padding:6px 12px;border-radius:8px;border:1px solid var(--border-subtle);transition:all 0.2s" class="owner-option" data-owner="儿子" onclick="selectOwner(this)">
+          <input type="radio" name="owner" value="儿子" style="display:none">👦 儿子
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">状态标记</label>
       <div class="status-btns">
         <button class="status-btn active-green" id="status-frequent" onclick="toggleStatus(this,'frequent')">✓ 常穿</button>
@@ -2223,6 +2241,11 @@ async function autoClassifyClothing(imageSrc) {
   const season = inferSeason(category, colorResult);
   document.getElementById('cloth-season').value = season;
   
+  // 5. 推断归属成员
+  const owner = inferOwner(category, colorResult);
+  const ownerOption = document.querySelector('.owner-option[data-owner="' + owner + '"]');
+  if (ownerOption) selectOwner(ownerOption);
+  
   // 更新状态
   if (aiTag) {
     aiTag.textContent = 'AI识别 ✓';
@@ -2233,6 +2256,7 @@ async function autoClassifyClothing(imageSrc) {
   if (colorResult) parts.push(colorResult.name);
   const seasonNames = { spring:'春', summer:'夏', autumn:'秋', winter:'冬', all:'四季' };
   parts.push(seasonNames[season] + '季');
+  parts.push(owner);
   showToast('AI识别：' + parts.join(' · '));
 }
 
@@ -2400,6 +2424,39 @@ function inferSeason(category, colorResult) {
   return 'all';
 }
 
+// ===== 归属成员推断 =====
+function inferOwner(category, colorResult) {
+  // 优先使用首页当前选中的家庭成员
+  const activeMember = document.querySelector('.family-member.active');
+  const currentMember = activeMember ? activeMember.dataset.name : '妈妈';
+  
+  // 根据衣物特征判断是否可能是儿童衣物
+  let isChildLikely = false;
+  
+  if (colorResult) {
+    const [r, g, b] = colorResult.rgb;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2 / 255;
+    const d = max - min;
+    const s = d === 0 ? 0 : d / (l > 0.5 ? (510 - max - min) : (max + min));
+    
+    // 高饱和度+高亮度的糖果色 → 可能是儿童衣物
+    if (s > 0.7 && l > 0.5) isChildLikely = true;
+    // 粉色系 → 女儿可能性大
+    // 浅蓝/浅绿 → 儿子可能性大
+  }
+  
+  // 配饰和鞋履通常不区分成人/儿童，跟随当前选择
+  if (category === 'accessory' || category === 'shoes') return currentMember;
+  
+  // 如果当前选中的已经是女儿或儿子，保持不变
+  if (currentMember === '女儿' || currentMember === '儿子') return currentMember;
+  
+  // 成人衣物跟随当前选择（妈妈/爸爸）
+  return currentMember;
+}
+
 // 显示上传选择弹窗
 function showUploadModal() {
   document.getElementById('uploadModal').classList.add('show');
@@ -2528,8 +2585,27 @@ function getCurrentDate() {
 
 // 获取当前选中的家庭成员
 function getCurrentOwner() {
+  // 优先从添加表单中获取
+  const selectedOption = document.querySelector('.owner-option.selected');
+  if (selectedOption) return selectedOption.dataset.owner;
+  // 兜底：从首页家庭成员选择器获取
   const activeMember = document.querySelector('.family-member.active');
   return activeMember ? activeMember.dataset.name : '妈妈';
+}
+
+// 选择归属成员
+function selectOwner(el) {
+  document.querySelectorAll('.owner-option').forEach(o => {
+    o.classList.remove('selected');
+    o.style.borderColor = 'var(--border-subtle)';
+    o.style.background = 'transparent';
+    o.style.color = 'var(--text-secondary)';
+  });
+  el.classList.add('selected');
+  el.style.borderColor = 'var(--gold)';
+  el.style.background = 'rgba(196,167,125,0.08)';
+  el.style.color = 'var(--text)';
+  el.querySelector('input').checked = true;
 }
 
 // 保存衣物
@@ -2618,6 +2694,17 @@ function resetAddForm() {
   // 重置AI标签
   const aiTag = document.getElementById('ai-tag');
   if (aiTag) aiTag.style.display = 'none';
+
+  // 重置归属成员为当前选中成员
+  const currentOwner = getCurrentOwner();
+  document.querySelectorAll('.owner-option').forEach(o => {
+    const isCurrent = o.dataset.owner === currentOwner;
+    o.classList.toggle('selected', isCurrent);
+    o.style.borderColor = isCurrent ? 'var(--gold)' : 'var(--border-subtle)';
+    o.style.background = isCurrent ? 'rgba(196,167,125,0.08)' : 'transparent';
+    o.style.color = isCurrent ? 'var(--text)' : 'var(--text-secondary)';
+    o.querySelector('input').checked = isCurrent;
+  });
 
   // 重置表单
   document.getElementById('cloth-name').value = '';
