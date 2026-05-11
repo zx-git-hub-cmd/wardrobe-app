@@ -3264,7 +3264,8 @@ function generateSceneOutfits(focusItem) {
 // 为单个场景生成搭配
 function generateSceneOutfit(clothes, gender, season, focusItem, scene) {
   const genderClothes = clothes.filter(c => c.gender === gender && c.status !== 'outdated');
-  const seasonClothes = filterBySeason(genderClothes, season);
+  // 焦点衣物强制加入，不受季节限制
+  const seasonClothes = genderClothes;
   
   // 按类别分组
   const byCategory = {};
@@ -3277,21 +3278,20 @@ function generateSceneOutfit(clothes, gender, season, focusItem, scene) {
   const usedIds = new Set();
   const recentWornIds = getRecentWornItemIds(3);
   
-  // 确定焦点衣物的位置
-  const focusCategory = focusItem.category;
+  // 焦点衣物必须加入，放在对应类别位置
+  selected.push(focusItem);
+  usedIds.add(String(focusItem.id));
   
-  // 根据场景的parts列表选择衣物
+  // 根据场景的parts列表选择其他衣物（跳过焦点衣物对应的类别）
   for (const part of scene.parts) {
+    if (selected.some(s => s.category === part) && part !== 'accessory2') continue;
+    
     let pool;
-    
-    if (part === focusCategory && !usedIds.has(String(focusItem.id))) {
-      // 焦点衣物优先放在对应位置
-      selected.push(focusItem);
-      usedIds.add(String(focusItem.id));
-      continue;
+    if (part === 'accessory2') {
+      pool = (byCategory['accessory'] || []).filter(c => !usedIds.has(String(c.id)));
+    } else {
+      pool = (byCategory[part] || []).filter(c => !usedIds.has(String(c.id)));
     }
-    
-    pool = (byCategory[part] || []).filter(c => !usedIds.has(String(c.id)));
     
     if (pool.length === 0) {
       // 如果没有该类别的衣物，尝试用其他类别替代
@@ -3330,16 +3330,6 @@ function generateSceneOutfit(clothes, gender, season, focusItem, scene) {
     const pick = scorePool[Math.floor(Math.random() * topN)].item;
     selected.push(pick);
     usedIds.add(String(pick.id));
-  }
-  
-  // 如果焦点衣物还没被加入（比如焦点是配饰但场景不需要配饰），强制加入
-  if (!usedIds.has(String(focusItem.id))) {
-    // 找一个合适的位置插入
-    const focusSlot = scene.parts.find(p => p === focusCategory) || scene.parts[0];
-    if (focusSlot) {
-      selected.unshift(focusItem);
-      usedIds.add(String(focusItem.id));
-    }
   }
   
   if (selected.length < 2) return null;
