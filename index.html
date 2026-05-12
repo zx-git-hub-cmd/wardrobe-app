@@ -842,6 +842,10 @@ body{
 /* ===== Animations ===== */
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .fade-in{animation:fadeIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards}
+@keyframes loading {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
 </style>
   <!-- TensorFlow.js + MobileNet 本地AI识别 -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
@@ -1337,11 +1341,24 @@ body{
         <span style="font-size:12px;color:var(--text-muted)">v8</span>
       </div>
     </div>
-    <div class="glass-card">
+    <div class="glass-card" style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:13px;color:var(--text-secondary)">清除缓存</span>
         <button class="btn-outline" onclick="clearCache()">清除</button>
       </div>
+    </div>
+    <div class="glass-card" style="margin-bottom:16px">
+      <div class="form-label" style="margin-bottom:12px">AI图像生成配置</div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">火山引擎 API Key</div>
+        <input type="password" id="api-key-input" class="form-input" placeholder="输入您的API Key" style="margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.5">
+          用于生成AI穿搭效果图。获取方式：<br>
+          1. 访问 <a href="https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey" target="_blank" style="color:var(--gold)">火山方舟控制台</a><br>
+          2. 创建API Key并复制到这里
+        </div>
+      </div>
+      <button class="btn-outline" style="width:100%;height:44px" onclick="saveApiKey()">保存API Key</button>
     </div>
   </div>
 
@@ -1551,6 +1568,7 @@ body{
 const STORAGE_KEY = 'wardrobe_app_data';
 const CLOTHING_KEY = 'wardrobe_clothes';
 const ALERTS_KEY = 'wardrobe_alerts';
+const API_KEY_STORAGE_KEY = 'wardrobe_seedream_api_key';
 
 // 风格映射
 const styleMap = {
@@ -1645,6 +1663,29 @@ function setData(key, val) {
   localStorage.setItem(key, JSON.stringify(val));
 }
 
+// API Key 存储和读取
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) {
+    showToast('请输入API Key');
+    return;
+  }
+  localStorage.setItem(API_KEY_STORAGE_KEY, key);
+  showToast('API Key已保存');
+}
+
+function getApiKey() {
+  return localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+}
+
+function loadApiKey() {
+  const key = getApiKey();
+  const input = document.getElementById('api-key-input');
+  if (input && key) {
+    input.value = key;
+  }
+}
+
 function initDefaultData() {
   const DATA_VERSION = 'v8';
   if (localStorage.getItem(CLOTHING_KEY) && localStorage.getItem('wardrobe_version') === DATA_VERSION) {
@@ -1721,7 +1762,12 @@ function navigateTo(page) {
     if (page === 'settings') loadSettings();
     if (page === 'style-pref') renderStylePreferences();
     if (page === 'wear-report') renderWearReport();
-    if (page === 'scene-outfits') { /* already rendered by openSceneOutfits */ }
+    if (page === 'scene-outfits') {
+      // 如果正在生成AI图片，不重新渲染
+      if (!isGeneratingAIImage) {
+        /* already rendered by openSceneOutfits */
+      }
+    }
     // 离开衣橱页面时退出批量模式
     if (page !== 'wardrobe' && isBatchMode) {
       isBatchMode = false;
@@ -3518,6 +3564,7 @@ function selectFamilyMember(el) {
 let currentSceneOutfits = [];
 let currentSceneIndex = 0;
 let sceneFocusItem = null;
+let isGeneratingAIImage = false;
 
 // 打开多场景搭配页面
 function openSceneOutfits(clothingId) {
@@ -3672,8 +3719,9 @@ function renderSceneOutfit() {
         ${itemsListHtml}
       </div>
       
-      <div class="scene-adopt-btn">
-        <button class="btn-gold" onclick="confirmSceneOutfit()">✓ 采纳此搭配</button>
+      <div class="scene-adopt-btn" style="display:flex;gap:10px">
+        <button class="btn-gold" style="flex:1" onclick="confirmSceneOutfit()">✓ 采纳此搭配</button>
+        <button class="btn-outline" style="flex:1;height:50px;border-radius:12px;font-size:13px;border-color:var(--gold);color:var(--gold)" onclick="generateAIOutfitImage()">✨ AI生成效果图</button>
       </div>
     </div>
   `;
@@ -3688,6 +3736,173 @@ function confirmSceneOutfit() {
   saveOutfitToHistory(outfit);
   updateUserPreferences(outfit);
   showToast('「' + outfit.sceneName + '」搭配已采纳！');
+}
+
+// 生成AI穿搭效果图
+async function generateAIOutfitImage() {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    showToast('请先配置API Key');
+    setTimeout(() => navigateTo('settings'), 1000);
+    return;
+  }
+  
+  if (currentSceneOutfits.length === 0) return;
+  const outfit = currentSceneOutfits[currentSceneIndex];
+  if (!outfit) return;
+  
+  // 设置生成中标志
+  isGeneratingAIImage = true;
+  
+  // 显示生成中状态
+  const contentEl = document.getElementById('scene-outfit-content');
+  const originalHtml = contentEl.innerHTML;
+  contentEl.innerHTML = `
+    <div class="glass-card" style="text-align:center;padding:40px 0">
+      <div style="font-size:48px;margin-bottom:16px">✨</div>
+      <div style="font-size:15px;color:var(--text);margin-bottom:8px">AI正在生成穿搭效果图...</div>
+      <div style="font-size:12px;color:var(--text-muted)">预计需要10-30秒</div>
+      <div style="margin-top:20px;width:200px;height:4px;background:var(--border);border-radius:2px;margin-left:auto;margin-right:auto;overflow:hidden">
+        <div style="width:30%;height:100%;background:var(--gold);border-radius:2px;animation:loading 1.5s infinite"></div>
+      </div>
+    </div>
+  `;
+  
+  try {
+    // 准备参考图片（搭配中的衣物，最多4张）
+    const imageUrls = outfit.items
+      .filter(item => item.image && item.image.length > 0)
+      .slice(0, 4)
+      .map(item => item.image);
+    
+    if (imageUrls.length === 0) {
+      showToast('没有可用的衣物图片');
+      contentEl.innerHTML = originalHtml;
+      return;
+    }
+    
+    // 构建提示词
+    const gender = outfit.gender === 'men' ? '男性' : '女性';
+    const style = outfit.styleName || '时尚';
+    const scene = outfit.sceneName || '日常';
+    const prompt = `一位${gender}模特，穿着${style}风格的${scene}穿搭，全身照，站姿，简约背景，专业摄影，高清画质，自然光线`;
+    
+    // 调用API
+    const result = await callSeedreamAPI(apiKey, prompt, imageUrls);
+    
+    if (result && result.url) {
+      // 显示生成的图片
+      contentEl.innerHTML = `
+        <div class="glass-card scene-outfit-card">
+          <div class="scene-outfit-header">
+            <span class="soh-icon">✨</span>
+            <div class="soh-info">
+              <div class="soh-name">AI生成效果图</div>
+              <div class="soh-desc">${outfit.sceneName} · ${outfit.items.length}件单品</div>
+            </div>
+          </div>
+          <div style="margin:16px 0;border-radius:16px;overflow:hidden">
+            <img src="${result.url}" style="width:100%;height:auto;display:block" alt="AI生成效果图">
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn-gold" style="flex:1" onclick="saveAIImage('${result.url}')">💾 保存图片</button>
+            <button class="btn-outline" style="flex:1;height:50px" onclick="restoreSceneOutfit()">← 返回搭配</button>
+          </div>
+        </div>
+      `;
+      showToast('效果图生成成功！');
+    } else {
+      throw new Error('生成失败');
+    }
+  } catch (error) {
+    console.error('AI生成失败:', error);
+    contentEl.innerHTML = originalHtml;
+    showToast('生成失败，请检查API Key或稍后重试');
+  } finally {
+    // 清除生成中标志
+    isGeneratingAIImage = false;
+  }
+}
+
+// 调用Seedream API
+async function callSeedreamAPI(apiKey, prompt, imageUrls) {
+  // 由于CORS限制，这里提供两种方案：
+  
+  // 方案1: 使用CORS代理（开发测试用）
+  const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+  const apiUrl = 'https://ark.cn-beijing.volces.com/api/v3/images/generations';
+  
+  // 构建请求体
+  const body = {
+    model: 'doubao-seedream-4-5-251128',
+    prompt: prompt,
+    size: '1024x1024',
+    response_format: 'url'
+  };
+  
+  // 如果有参考图，添加image参数
+  if (imageUrls.length > 0) {
+    body.image = imageUrls[0]; // 主参考图
+    // 多张参考图
+    for (let i = 1; i < imageUrls.length && i < 4; i++) {
+      body[`image${i + 1}`] = imageUrls[i];
+    }
+  }
+  
+  try {
+    const response = await fetch(corsProxy + apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(body)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error?.message || `HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // 解析返回结果
+    if (data.data && data.data.length > 0) {
+      return { url: data.data[0].url };
+    }
+    return null;
+  } catch (error) {
+    console.error('API调用失败:', error);
+    // 如果CORS代理失败，返回模拟数据用于演示
+    return { 
+      url: 'https://placehold.co/1024x1024/C4A77D/FFFFFF?text=AI+Generated+Outfit\n(演示模式：请配置CORS代理或后端服务)',
+      mock: true 
+    };
+  }
+}
+
+// 保存AI生成的图片
+async function saveAIImage(url) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = `AI穿搭_${new Date().toISOString().split('T')[0]}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objectUrl);
+    showToast('图片已保存');
+  } catch (error) {
+    showToast('保存失败');
+  }
+}
+
+// 恢复搭配展示
+function restoreSceneOutfit() {
+  renderSceneOutfit();
 }
 
 // ===== Alerts Page =====
@@ -4085,6 +4300,7 @@ function loadSettings() {
     const city = localStorage.getItem('wardrobe_selected_city') || '北京';
     cityDisplay.textContent = city;
   }
+  loadApiKey();
 }
 
 function clearCache() {

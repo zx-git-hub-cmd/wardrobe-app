@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wardrobe-app-v20';
+const CACHE_NAME = 'wardrobe-app-v21';
 const ASSETS = [
   '/index.html',
   '/manifest.json'
