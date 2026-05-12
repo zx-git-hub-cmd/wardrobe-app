@@ -1873,8 +1873,10 @@ function renderWardrobe() {
     const isOutdated = c.status === 'outdated';
     const styleLabel = c.style ? (styleMap[c.style] || '') : '';
     const isChecked = batchSelectedIds.has(String(c.id));
+    // 批量模式下点击卡片只触发选择，不进入详情页
+    const cardClick = isBatchMode ? `toggleSelect('${c.id}')` : `viewClothingDetail('${c.id}')`;
     return `
-      <div class="clothing-card fade-in" onclick="viewClothingDetail('${c.id}')">
+      <div class="clothing-card fade-in" onclick="${cardClick}">
         <div class="batch-check ${isChecked ? 'checked' : ''}" onclick="event.stopPropagation();toggleSelect('${c.id}')">${isChecked ? '✓' : ''}</div>
         ${isOutdated ? '<div class="c-status-tag">过时</div>' : ''}
         ${hasImage
@@ -2334,7 +2336,7 @@ async function callVisionAPI(apiKey, imageSrc) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'doubao-vision-lite-32k-250115', // 或 doubao-vision-pro-32k-241028
+        model: 'doubao-vision-lite-32k', // 火山引擎视觉模型
         messages: [
           {
             role: 'user',
@@ -3824,9 +3826,10 @@ function renderSceneOutfit() {
         ${itemsListHtml}
       </div>
       
-      <div class="scene-adopt-btn" style="display:flex;gap:10px">
-        <button class="btn-gold" style="flex:1" onclick="confirmSceneOutfit()">✓ 采纳此搭配</button>
-        <button class="btn-outline" style="flex:1;height:50px;border-radius:12px;font-size:13px;border-color:var(--gold);color:var(--gold)" onclick="generateAIOutfitImage()">✨ AI生成效果图</button>
+      <div class="scene-adopt-btn" style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-gold" style="flex:1;min-width:120px" onclick="confirmSceneOutfit()">✓ 采纳此搭配</button>
+        <button class="btn-outline" style="flex:1;min-width:120px;height:50px;border-radius:12px;font-size:13px" onclick="refreshSceneOutfit()">🔄 换一套</button>
+        <button class="btn-outline" style="width:100%;height:50px;border-radius:12px;font-size:13px;border-color:var(--gold);color:var(--gold)" onclick="generateAIOutfitImage()">✨ AI生成效果图</button>
       </div>
     </div>
   `;
@@ -4052,6 +4055,25 @@ async function saveAIImage(url) {
 // 恢复搭配展示
 function restoreSceneOutfit() {
   renderSceneOutfit();
+}
+
+// 换一套搭配
+function refreshSceneOutfit() {
+  if (!sceneFocusItem) return;
+  
+  // 重新生成多场景搭配
+  currentSceneOutfits = generateSceneOutfits(sceneFocusItem);
+  
+  // 如果当前场景索引超出范围，重置为0
+  if (currentSceneIndex >= currentSceneOutfits.length) {
+    currentSceneIndex = 0;
+  }
+  
+  // 重新渲染
+  renderSceneTabs();
+  renderSceneOutfit();
+  
+  showToast('已为您推荐新的搭配方案');
 }
 
 // ===== Alerts Page =====
