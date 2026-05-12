@@ -3816,8 +3816,35 @@ async function generateAIOutfitImage() {
     }
   } catch (error) {
     console.error('AI生成失败:', error);
-    contentEl.innerHTML = originalHtml;
-    showToast('生成失败，请检查API Key或稍后重试');
+    isGeneratingAIImage = false;
+    
+    // 显示详细的错误信息
+    const errorMessage = error.message || '生成失败';
+    const isCorsError = errorMessage.includes('CORS') || errorMessage.includes('Failed to fetch');
+    
+    contentEl.innerHTML = `
+      <div class="glass-card" style="text-align:center;padding:40px 20px">
+        <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+        <div style="font-size:15px;color:var(--text);margin-bottom:12px">生成失败</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:20px;line-height:1.6">${errorMessage}</div>
+        ${isCorsError ? `
+        <div style="font-size:11px;color:var(--text-secondary);background:var(--bg);padding:12px;border-radius:8px;margin-bottom:20px;text-align:left;line-height:1.6">
+          <strong>解决方案：</strong><br>
+          1. 搭建后端代理服务转发API请求<br>
+          2. 使用浏览器插件临时禁用CORS（仅测试）<br>
+          3. 联系开发者配置支持CORS的API端点
+        </div>
+        ` : ''}
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button class="btn-outline" style="height:44px" onclick="restoreSceneOutfit()">← 返回搭配</button>
+          <button class="btn-gold" style="height:44px;width:auto;padding:0 24px" onclick="generateAIOutfitImage()">🔄 重试</button>
+        </div>
+      </div>
+    `;
+    
+    if (!isCorsError) {
+      showToast('生成失败：' + errorMessage);
+    }
   } finally {
     // 清除生成中标志
     isGeneratingAIImage = false;
@@ -3826,10 +3853,9 @@ async function generateAIOutfitImage() {
 
 // 调用Seedream API
 async function callSeedreamAPI(apiKey, prompt, imageUrls) {
-  // 由于CORS限制，这里提供两种方案：
+  // 注意：由于浏览器CORS限制，纯前端应用无法直接调用火山引擎API
+  // 需要配置后端代理服务或使用支持CORS的API端点
   
-  // 方案1: 使用CORS代理（开发测试用）
-  const corsProxy = 'https://cors-anywhere.herokuapp.com/';
   const apiUrl = 'https://ark.cn-beijing.volces.com/api/v3/images/generations';
   
   // 构建请求体
@@ -3849,15 +3875,22 @@ async function callSeedreamAPI(apiKey, prompt, imageUrls) {
     }
   }
   
+  // 创建AbortController用于超时控制
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+  
   try {
-    const response = await fetch(corsProxy + apiUrl, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -3872,12 +3905,17 @@ async function callSeedreamAPI(apiKey, prompt, imageUrls) {
     }
     return null;
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error('API调用失败:', error);
-    // 如果CORS代理失败，返回模拟数据用于演示
-    return { 
-      url: 'https://placehold.co/1024x1024/C4A77D/FFFFFF?text=AI+Generated+Outfit\n(演示模式：请配置CORS代理或后端服务)',
-      mock: true 
-    };
+    
+    // 判断错误类型
+    if (error.name === 'AbortError') {
+      throw new Error('请求超时，请检查网络连接或稍后重试');
+    } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+      throw new Error('CORS跨域限制：纯前端应用无法直接调用API，请配置后端代理服务');
+    } else {
+      throw new Error(error.message || 'API调用失败');
+    }
   }
 }
 
