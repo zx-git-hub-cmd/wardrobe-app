@@ -3458,17 +3458,9 @@ async function generateAIOutfitImage() {
     const itemNames = outfit.items.map(i => i.name).join('、');
     const clothingCount = Math.min(clothingImages.length, 3);
     
-    // 构建提示词：明确告诉AI图1是模特，图2-4是服装
-    let prompt;
-    if (clothingCount > 0) {
-      const clothingRefs = [];
-      for (let i = 0; i < clothingCount; i++) {
-        clothingRefs.push(`图${i + 2}`);
-      }
-      prompt = `严格按照图1的假人模特的姿势、体型和全身站姿，将${clothingRefs.join('、')}中的服装穿在这个模特身上。必须保持图1模特的完整全身姿势，从头到脚都要显示。服装包括：${itemNames}。生成一张${style}风格的${scene}穿搭效果图。要求：1)完整全身照，从头到脚；2)保持图1模特的站姿和姿势；3)简约纯色背景；4)专业摄影，高清画质，自然光线`;
-    } else {
-      prompt = `一位${gender}模特，穿着${style}风格的${scene}穿搭。完整全身照，从头到脚，站姿，简约纯色背景，专业摄影，高清画质，自然光线`;
-    }
+    // 构建提示词：告诉AI图1是假人模特，并在文字中详细描述服装
+    const clothingDesc = outfit.items.map(i => i.name + '(' + (i.colorName || '') + ')').join('、');
+    const prompt = `严格按照图1的假人模特的姿势、体型和全身站姿，给这个模特穿上以下服装：${clothingDesc}。必须保持图1模特的完整全身姿势，从头到脚都要显示。生成一张${style}风格的${scene}穿搭效果图。要求：1)完整全身照，从头到脚；2)保持图1模特的站姿和姿势；3)简约纯色背景；4)专业摄影，高清画质，自然光线`;
 
     // 4. 调用API（传入所有参考图）
     const result = await callSeedreamAPI(apiKey, prompt, clothingImages, modelImage);
@@ -3544,19 +3536,14 @@ async function callSeedreamAPI(apiKey, prompt, clothingImages, modelImage) {
     return baseUrl + url.replace(/^\//, ''); // 相对路径转完整URL
   };
 
-  // 构建参考图数组：假人模特放第一位，最多再传1件衣物（减少超时风险）
+  // 构建参考图数组：假人模特放第一位，衣物图片放后面
+  // 注意：只传假人模特图片（它是用户提供的最重要参考），不传衣物图片避免超时
   const allImages = [];
   const modelUrl = toPublicUrl(modelImage);
   if (modelUrl) {
-    allImages.push(modelUrl); // 图1：假人模特（必须）
+    allImages.push(modelUrl); // 图1：假人模特
   }
-  // 只传第一件衣物图片作为参考（减少下载超时风险）
-  for (let i = 0; i < clothingImages.length && allImages.length < 2; i++) {
-    const clothUrl = toPublicUrl(clothingImages[i]);
-    if (clothUrl) {
-      allImages.push(clothUrl); // 图2：主要衣物
-    }
-  }
+  // 衣物图片暂不传，避免GitHub Pages下载超时影响生成
   
   // 如果没有有效的参考图，只用文字生成
   const body = {
