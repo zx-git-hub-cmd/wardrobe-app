@@ -2126,12 +2126,18 @@ function updateBatchCount() {
 }
 
 function batchDelete() {
-  if (batchSelectedIds.size === 0) return;
+  console.log('batchDelete called, selected:', batchSelectedIds.size, 'ids:', Array.from(batchSelectedIds));
+  if (batchSelectedIds.size === 0) {
+    showToast('请先选择要删除的衣物');
+    return;
+  }
   const count = batchSelectedIds.size;
   if (!confirm('确定要删除选中的 ' + count + ' 件衣物吗？删除后无法恢复。')) return;
 
   const clothes = getData(CLOTHING_KEY, defaultClothes);
+  console.log('Before delete:', clothes.length, 'clothes');
   const remaining = clothes.filter(c => !batchSelectedIds.has(String(c.id)));
+  console.log('After filter:', remaining.length, 'clothes');
   setData(CLOTHING_KEY, remaining);
   showToast('已删除 ' + count + ' 件衣物');
 
