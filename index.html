@@ -3418,17 +3418,6 @@ async function generateAIOutfitImage() {
     const systemModel = systemModelMap[outfit.style] || (outfit.gender === 'men' ? 'images/model_m_casual.jpg' : 'images/model_w_minimal.jpg');
     const modelImage = userModel || systemModel;
 
-    // 检查是否有公网可访问的图片
-    const publicImages = clothingImages.filter(img => !img.startsWith('data:'));
-    const hasPublicModel = modelImage && !modelImage.startsWith('data:');
-
-    if (publicImages.length === 0 && !hasPublicModel) {
-      showToast('衣物图片为本地格式，AI生成需要公网可访问的图片URL');
-      contentEl.innerHTML = originalHtml;
-      isGeneratingAIImage = false;
-      return;
-    }
-
     // 3. 构建提示词
     const gender = outfit.gender === 'men' ? '男性' : '女性';
     const style = outfit.styleName || '时尚';
@@ -3514,28 +3503,42 @@ async function generateAIOutfitImage() {
 // 调用Seedream API
 async function callSeedreamAPI(apiKey, prompt, clothingImages, modelImage) {
   const apiUrl = 'https://ark.cn-beijing.volces.com/api/v3/images/generations';
+  
+  // 将相对路径转换为完整的GitHub Pages URL
+  const baseUrl = 'https://zx-git-hub-cmd.github.io/wardrobe-app/';
+  const toPublicUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('data:')) return null; // 过滤base64
+    if (url.startsWith('http')) return url; // 已经是完整URL
+    return baseUrl + url.replace(/^\//, ''); // 相对路径转完整URL
+  };
 
   // 构建参考图数组：假人模特放第一位，衣物图片放后面
-  // 注意：只使用公网URL，过滤掉base64图片
   const allImages = [];
-  if (modelImage && !modelImage.startsWith('data:')) {
-    allImages.push(modelImage); // 图1：假人模特
+  const modelUrl = toPublicUrl(modelImage);
+  if (modelUrl) {
+    allImages.push(modelUrl); // 图1：假人模特
   }
-  // 衣物图片作为图2-4（只使用公网URL）
+  // 衣物图片作为图2-4
   for (let i = 0; i < clothingImages.length && allImages.length < 4; i++) {
-    if (!clothingImages[i].startsWith('data:')) {
-      allImages.push(clothingImages[i]);
+    const clothUrl = toPublicUrl(clothingImages[i]);
+    if (clothUrl) {
+      allImages.push(clothUrl);
     }
   }
-
-  // 构建请求体 - Seedream 4.5 支持多图参考
+  
+  // 如果没有有效的参考图，只用文字生成
   const body = {
     model: 'doubao-seedream-4-5-251128',
     prompt: prompt,
     size: '2048x2048',
-    response_format: 'url',
-    image: allImages  // 使用数组格式传递多张参考图
+    response_format: 'url'
   };
+  
+  // 只有有参考图时才添加image参数
+  if (allImages.length > 0) {
+    body.image = allImages;
+  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时（大图生成较慢）
