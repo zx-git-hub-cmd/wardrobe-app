@@ -3912,7 +3912,19 @@ async function generateAIOutfitImage() {
 
     // 列出所有衣物名称
     const itemNames = outfit.items.map(i => i.name).join('、');
-    const prompt = `一位${gender}模特，穿着${style}风格的${scene}穿搭。具体包括：${itemNames}。全身照，站姿，简约纯色背景，专业摄影，高清画质，自然光线，模特姿势参考提供的假人模特图`;
+    const clothingCount = Math.min(clothingImages.length, 3);
+    
+    // 构建提示词：明确告诉AI图1是模特，图2-4是服装
+    let prompt;
+    if (clothingCount > 0) {
+      const clothingRefs = [];
+      for (let i = 0; i < clothingCount; i++) {
+        clothingRefs.push(`图${i + 2}`);
+      }
+      prompt = `参考图1的假人模特姿势和体型，将${clothingRefs.join('、')}的服装穿在这个模特身上。服装包括：${itemNames}。保持模特的姿势和风格，生成一张${style}风格的${scene}穿搭效果图。全身照，站姿，简约纯色背景，专业摄影，高清画质，自然光线`;
+    } else {
+      prompt = `一位${gender}模特，穿着${style}风格的${scene}穿搭。全身照，站姿，简约纯色背景，专业摄影，高清画质，自然光线`;
+    }
 
     // 4. 调用API（传入所有参考图）
     const result = await callSeedreamAPI(apiKey, prompt, clothingImages, modelImage);
@@ -3979,28 +3991,25 @@ async function generateAIOutfitImage() {
 async function callSeedreamAPI(apiKey, prompt, clothingImages, modelImage) {
   const apiUrl = 'https://ark.cn-beijing.volces.com/api/v3/images/generations';
 
-  // 构建请求体 - Seedream支持多图参考
+  // 构建参考图数组：假人模特放第一位，衣物图片放后面
+  // 这样提示词可以说"将图2-4的服装穿在图1的模特身上"
+  const allImages = [];
+  if (modelImage) {
+    allImages.push(modelImage); // 图1：假人模特
+  }
+  // 衣物图片作为图2-4
+  for (let i = 0; i < Math.min(clothingImages.length, 3); i++) {
+    allImages.push(clothingImages[i]);
+  }
+
+  // 构建请求体 - Seedream 4.5 支持多图参考
   const body = {
     model: 'doubao-seedream-4-5-251128',
     prompt: prompt,
     size: '2048x2048',
-    response_format: 'url'
+    response_format: 'url',
+    image: allImages  // 使用数组格式传递多张参考图
   };
-
-  // 添加参考图片（衣物图片 + 假人模特）
-  const allImages = [...clothingImages];
-  if (modelImage) {
-    allImages.push(modelImage); // 假人模特作为最后一个参考图
-  }
-
-  // Seedream支持多图参考，最多4张
-  for (let i = 0; i < Math.min(allImages.length, 4); i++) {
-    if (i === 0) {
-      body.image = allImages[i];
-    } else {
-      body[`image${i + 1}`] = allImages[i];
-    }
-  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时（大图生成较慢）
