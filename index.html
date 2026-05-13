@@ -2102,7 +2102,8 @@ function toggleSelect(id) {
     const card = chk.closest('.clothing-card');
     if (card) {
       const cardOnclick = card.getAttribute('onclick');
-      const match = cardOnclick && cardOnclick.match(/viewClothingDetail\('([^']+)'\)/);
+      // 匹配两种可能的 onclick 格式：viewClothingDetail('id') 或 toggleSelect('id')
+      const match = cardOnclick && (cardOnclick.match(/viewClothingDetail\('([^']+)'\)/) || cardOnclick.match(/toggleSelect\('([^']+)'\)/));
       if (match && match[1] === id) {
         if (batchSelectedIds.has(id)) {
           chk.classList.add('checked');
@@ -3434,9 +3435,9 @@ async function generateAIOutfitImage() {
       for (let i = 0; i < clothingCount; i++) {
         clothingRefs.push(`图${i + 2}`);
       }
-      prompt = `参考图1的假人模特姿势和体型，将${clothingRefs.join('、')}的服装穿在这个模特身上。服装包括：${itemNames}。保持模特的姿势和风格，生成一张${style}风格的${scene}穿搭效果图。全身照，站姿，简约纯色背景，专业摄影，高清画质，自然光线`;
+      prompt = `严格按照图1的假人模特的姿势、体型和全身站姿，将${clothingRefs.join('、')}中的服装穿在这个模特身上。必须保持图1模特的完整全身姿势，从头到脚都要显示。服装包括：${itemNames}。生成一张${style}风格的${scene}穿搭效果图。要求：1)完整全身照，从头到脚；2)保持图1模特的站姿和姿势；3)简约纯色背景；4)专业摄影，高清画质，自然光线`;
     } else {
-      prompt = `一位${gender}模特，穿着${style}风格的${scene}穿搭。全身照，站姿，简约纯色背景，专业摄影，高清画质，自然光线`;
+      prompt = `一位${gender}模特，穿着${style}风格的${scene}穿搭。完整全身照，从头到脚，站姿，简约纯色背景，专业摄影，高清画质，自然光线`;
     }
 
     // 4. 调用API（传入所有参考图）
@@ -3513,17 +3514,17 @@ async function callSeedreamAPI(apiKey, prompt, clothingImages, modelImage) {
     return baseUrl + url.replace(/^\//, ''); // 相对路径转完整URL
   };
 
-  // 构建参考图数组：假人模特放第一位，衣物图片放后面
+  // 构建参考图数组：假人模特放第一位，最多再传1件衣物（减少超时风险）
   const allImages = [];
   const modelUrl = toPublicUrl(modelImage);
   if (modelUrl) {
-    allImages.push(modelUrl); // 图1：假人模特
+    allImages.push(modelUrl); // 图1：假人模特（必须）
   }
-  // 衣物图片作为图2-4
-  for (let i = 0; i < clothingImages.length && allImages.length < 4; i++) {
+  // 只传第一件衣物图片作为参考（减少下载超时风险）
+  for (let i = 0; i < clothingImages.length && allImages.length < 2; i++) {
     const clothUrl = toPublicUrl(clothingImages[i]);
     if (clothUrl) {
-      allImages.push(clothUrl);
+      allImages.push(clothUrl); // 图2：主要衣物
     }
   }
   
