@@ -2125,19 +2125,36 @@ function updateBatchCount() {
   if (delBtn) delBtn.disabled = batchSelectedIds.size === 0;
 }
 
+// 批量删除确认回调
+let batchDeleteConfirmCallback = null;
+
 function batchDelete() {
-  console.log('batchDelete called, selected:', batchSelectedIds.size, 'ids:', Array.from(batchSelectedIds));
   if (batchSelectedIds.size === 0) {
     showToast('请先选择要删除的衣物');
     return;
   }
+  
   const count = batchSelectedIds.size;
-  if (!confirm('确定要删除选中的 ' + count + ' 件衣物吗？删除后无法恢复。')) return;
+  
+  // 使用自定义确认弹窗（替代原生的confirm）
+  const modal = document.getElementById('confirmModal');
+  const title = modal.querySelector('.confirm-modal-title');
+  const desc = modal.querySelector('.confirm-modal-desc');
+  const confirmBtn = modal.querySelector('.btn-confirm');
+  
+  title.textContent = '确认批量删除';
+  desc.textContent = '确定要删除选中的 ' + count + ' 件衣物吗？删除后无法恢复。';
+  confirmBtn.textContent = '删除';
+  confirmBtn.onclick = executeBatchDelete;
+  
+  modal.classList.add('show');
+}
 
+function executeBatchDelete() {
+  const count = batchSelectedIds.size;
+  
   const clothes = getData(CLOTHING_KEY, defaultClothes);
-  console.log('Before delete:', clothes.length, 'clothes');
   const remaining = clothes.filter(c => !batchSelectedIds.has(String(c.id)));
-  console.log('After filter:', remaining.length, 'clothes');
   setData(CLOTHING_KEY, remaining);
   showToast('已删除 ' + count + ' 件衣物');
 
@@ -2146,6 +2163,13 @@ function batchDelete() {
   document.getElementById('page-wardrobe').classList.remove('batch-mode');
   document.getElementById('batch-bar').classList.remove('show');
   document.getElementById('batch-toggle-btn').textContent = '批量管理';
+  
+  // 恢复确认按钮的原始点击事件
+  const modal = document.getElementById('confirmModal');
+  const confirmBtn = modal.querySelector('.btn-confirm');
+  confirmBtn.onclick = confirmDelete;
+  
+  closeConfirmModal();
   renderWardrobe();
 }
 
